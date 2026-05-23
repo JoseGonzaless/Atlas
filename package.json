@@ -1,0 +1,12 @@
+{
+  "name": "atlas",
+  "private": true,
+  "scripts": {
+    "dev:web": "pnpm --filter web dev",
+    "dev:bot": "pnpm --filter bot dev",
+    "typecheck": "pnpm --filter web typecheck && pnpm --filter bot typecheck"
+  },
+  "pnpm": {
+    "workspaces": ["apps/*"]
+  }
+}
