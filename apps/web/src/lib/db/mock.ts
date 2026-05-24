@@ -390,4 +390,4 @@ export class MockDatabase implements IDatabase {
   }
 }
 
-export const db: IDatabase = new MockDatabase()
+export const mockDb: IDatabase = new MockDatabase()
