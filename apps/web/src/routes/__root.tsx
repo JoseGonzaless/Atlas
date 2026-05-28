@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import { createRootRoute, Outlet, useNavigate, useRouterState } from '@tanstack/react-router'
 import { AppShell } from '@/components/layout/AppShell'
 import { Skeleton } from '@/components/ui/skeleton'
+import { TooltipProvider } from '@/components/ui/tooltip'
 import { useAuth } from '../lib/useAuth'
 
 function RootComponent() {
@@ -32,7 +33,11 @@ function RootComponent() {
     return <Outlet />
   }
 
-  return <AppShell />
+  return (
+    <TooltipProvider>
+      <AppShell />
+    </TooltipProvider>
+  )
 }
 
 export const Route = createRootRoute({
