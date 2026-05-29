@@ -52,6 +52,9 @@
     --color-shared-foreground: var(--shared-foreground);
     --color-personal: var(--personal);
     --color-personal-foreground: var(--personal-foreground);
+    /* Financial state tokens — use as text-positive, text-negative */
+    --color-positive: var(--positive);
+    --color-negative: var(--negative);
     --radius-sm: calc(var(--radius) * 0.6);
     --radius-md: calc(var(--radius) * 0.8);
     --radius-lg: var(--radius);
@@ -101,6 +104,10 @@
     --chart-4: oklch(0.550 0.080 168);   /* Mid-green */
     --chart-5: oklch(0.469 0.009 96);    /* Ink-3 */
 
+    /* Financial state */
+    --positive: oklch(0.523 0.138 152);   /* ~emerald-600 */
+    --negative: oklch(0.535 0.197 27);    /* ~red-600 */
+
     --radius: 0.625rem;
 
     /* Sidebar — Parchment-2 #F4EFE5 */
@@ -143,6 +150,9 @@
     --accent:               oklch(0.243 0.005 90);
     --accent-foreground:    oklch(0.674 0.060 168);  /* lighter Forest */
     --destructive:          oklch(0.651 0.117 23);   /* #D27668 */
+    /* Financial state */
+    --positive: oklch(0.697 0.110 152);   /* ~emerald-400 */
+    --negative: oklch(0.681 0.177 27);    /* ~red-400 */
     --border:               oklch(0.296 0.007 83);   /* #383530 */
     --input:                oklch(0.296 0.007 83);
     --ring:                 oklch(0.674 0.060 168);
