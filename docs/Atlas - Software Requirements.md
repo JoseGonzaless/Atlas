@@ -13,7 +13,7 @@ Atlas uses a single user type. Each user owns one account and may **link** to ex
   * Both linked users have equal permission to:
     * Log Shared expenses on behalf of the partnership.
     * View the partnership's Shared Ledger and Settlement history.
-    * Initiate a Settlement.
+    * Initiate or confirm a Settlement.
     * Configure the partnership's Settlement Frequency.
   * Neither linked user may:
     * View the other's Personal Ledger.
@@ -243,7 +243,7 @@ The Dashboard is the post-login landing page. It provides an at-a-glance view of
 
 ## **5. Shared Ledger**
 
-The **Shared Ledger** is a temporary, period-scoped record of expenses both partners have agreed to split. It exists only for the current Settlement Period; on settlement, its contents are moved to each partner's Personal Ledger at split cost and the Shared Ledger is reset for the next period. Both linked users see the same Shared Ledger contents at all times.
+The **Shared Ledger** is a temporary, period-scoped record of expenses both partners have agreed to split. It exists for the current Settlement Period; expenses remain in the Shared Ledger for the full period duration. The ledger only resets when the period ends and a new one begins. Both linked users see the same Shared Ledger contents at all times.
 
 * **Entry points**: Sidebar **Shared Ledger** item; "View all" link on the Dashboard.
 * **Scope**: The signed-in user's partnership. If the user is not linked, the page displays: Display: "You're not linked to a partner yet. Link a partner to start a Shared Ledger." with a button to § Settings — Partner Link, and no table is shown.
@@ -251,7 +251,7 @@ The **Shared Ledger** is a temporary, period-scoped record of expenses both part
 ### **5a. Layout**
 
 1. **Period header**: Current Period label, dates, time remaining until settlement, and **Settle now** button (see § Settlements — Settle Now). If at least one Outstanding period exists, a banner above the header links to those overdue items.
-2. **Totals strip**: "You paid", "{Partner display name} paid", "Total", "Your share", and the outcome line — identical content and data sources to § Dashboard — Balance Card, scoped to the current period.
+2. **Totals strip**: "You paid", "{Partner display name} paid", "Total", "Your share", and the outcome line — scoped to the current period. "You paid" and "Total" always reflect gross figures from all period expenses. The net balance shown in the outcome line reflects the running net after confirmed mid-period settlements (gross balance minus the sum of confirmed settlement amounts for the period).
 3. **Filters & search bar** (see § 5b).
 4. **Expense table** (see § 5c).
 5. **Pagination** at table footer (see § Tables, Lists & Results).
@@ -484,7 +484,7 @@ The Telegram bot is a logging channel that writes to the same underlying data as
 
 ## **9. Settlements**
 
-A **Settlement** closes a Settlement Period, moves all Shared expenses from that period into both partners' Personal Ledgers at split cost, and creates an immutable **Settlement Receipt**. Settlements may occur on-time (at the period deadline), early (at any time before the deadline), or late (after the deadline; the unsettled period is marked **Outstanding** in the meantime).
+A **Settlement** is a mid-period balance reset. It requires both partners to confirm (**handshake**): either partner may initiate, and the other must confirm before the settlement takes effect. On confirmation, the net balance resets but expenses remain in the Shared Ledger unchanged. A period's expenses are archived when the period closes at its end date, not when a settlement occurs. Multiple settlements may occur within a single period; each confirmed settlement reduces the running net balance.
 
 * **Entry points**: Sidebar **Settlements** item; **Settle now** buttons on Dashboard and Shared Ledger; **Settle now** inline action on an Outstanding row.
 * **Scope**: The signed-in user's partnership. If unlinked, the page displays the same unlinked message as § Shared Ledger.
@@ -502,40 +502,38 @@ A **Settlement** closes a Settlement Period, moves all Shared expenses from that
 
 ### **9b. Settle Now (Current Period)**
 
-* Triggered from any **Settle now** button on the current period.
+* Triggered from any **Settle now** button on the current period. The button is hidden while a pending settlement exists.
+* **If the Shared Ledger for the current period is empty**: the **Settle now** button is hidden; nothing to settle.
 * Opens a confirmation modal:
   * Title: "Settle {period label}?"
-  * Body: Display: "This will move all {N} shared expenses from this period into each partner's personal ledger at half cost. Once settled, the period's shared ledger can't be edited."
+  * Body: Display: "This sends a settlement request to {Partner}. Once they confirm, the net balance resets — all expenses stay visible for the rest of the period."
   * **Summary block** inside the modal:
     * "You paid: ${X}"
     * "{Partner display name} paid: ${Y}"
     * "Total: ${X+Y}"
     * "Your share: ${(X+Y)/2}"
     * Outcome line per § Dashboard — Balance Card.
-  * Actions: "Cancel" / "Settle".
-* **If the Shared Ledger for the current period is empty**: the **Settle now** button is hidden; nothing to settle.
-* On confirm:
-  * A Settlement Receipt is created (see § 9d).
-  * Each Shared expense is written to both partners' Personal Ledgers at split cost (half the original amount each), preserving the original logged date.
-  * The Shared Ledger for the current period is reset to empty.
-  * The Settlement is recorded with status:
-    * **On-time** if the confirm timestamp falls within the period's last day.
-    * **Early** if before the last day.
-  * The user is redirected to the Settlement Receipt subpage.
-* On network/server failure: Display: "We couldn't complete the settlement. No changes were made. Try again." (See § Global — Network and Sync; settlements are atomic — either all expenses move and the receipt is created, or nothing changes.)
+  * Actions: "Cancel" / "Send request".
+* On submit ("Send request"): a **pending settlement** is created. No expenses are moved; the Shared Ledger is unchanged.
+* **Pending settlement banner** — displayed on the Shared Ledger for both partners while a settlement is pending:
+  * For the initiator: Display: "Waiting for {Partner} to confirm {amount}." + **Cancel** button.
+  * For the partner: Display: "{Initiator} wants to settle {amount}." + **Confirm** and **Reject** buttons.
+* **On confirm by partner**: the settlement is recorded as **confirmed**. Net balance resets. Toast: "Settled — {amount}" or "Settled — all even." Expenses are not moved; the Shared Ledger contents are unchanged.
+* **On reject by partner**: the pending settlement is cancelled. Both partners return to the normal state; the **Settle now** button reappears.
+* On network/server failure: Display: "We couldn't send the settlement request. No changes were made. Try again."
 
 ### **9c. Settle Outstanding (Past Period)**
 
 * Triggered from the **Settle now** action on an Outstanding row, or from the Dashboard Outstanding list.
+* Uses the same handshake mechanism as § 9b. Either partner may initiate; the other must confirm.
 * Opens a confirmation modal:
   * Title: "Settle {period label}? (overdue by {days} days)"
-  * Body: Display: "This will move all {N} shared expenses from this period into each partner's personal ledger at half cost. The receipt will be marked 'Settled Late'."
+  * Body: Display: "This sends a settlement request to {Partner}. Once they confirm, the remaining net balance for this period is cleared."
   * Same summary block as § 9b.
-  * Actions: "Cancel" / "Settle late".
-* On confirm:
-  * A Settlement Receipt is created with status **Settled Late**, recording: settlement date, original period end date, and days overdue.
-  * Same data movement as § 9b.
-  * The Outstanding row is removed from the Outstanding section and the receipt is added to Past Settlements.
+  * Actions: "Cancel" / "Send request".
+* On submit: a pending settlement is created for the outstanding period. The same pending banner and confirm/reject flow applies as in § 9b.
+* **On confirm by partner**: the settlement clears the remaining net balance for the outstanding period. The outstanding period moves to a settled/closed state. The Outstanding row is removed from the Outstanding section and the receipt is added to Past Settlements.
+* **On reject by partner**: the pending settlement is cancelled; the period remains Outstanding.
 
 ### **9d. Settlement Receipt (Subpage)**
 
@@ -554,22 +552,25 @@ A **Settlement** closes a Settlement Period, moves all Shared expenses from that
 
 ### **9e. Lifecycle & Constraints**
 
+* **Settlement statuses** (closed set — individual settlement records):
+  * **Pending** — settlement request sent by one partner; awaiting confirmation from the other.
+  * **Confirmed** — both partners confirmed; net balance was reset at confirmation time.
+  * **Rejected** — partner rejected the settlement request; no balance change occurred.
 * **Settlement Period statuses** (closed set):
   * **Open** — current period; Shared Ledger accepts new entries; Settle now is available when ≥ 1 expense exists.
-  * **Outstanding** — period end date has passed without a Settlement; new Shared expenses logged after the end date roll into the **next** Open period.
-  * **Settled** — a Settlement Receipt exists for this period; the period's Shared Ledger is permanently empty/locked.
+  * **Outstanding** — period end date has passed with a non-zero net balance (after accounting for all confirmed mid-period settlements); new Shared expenses logged after the end date roll into the **next** Open period.
+  * **Settled** — the period has closed at its natural end date with a zero net balance, or an Outstanding period whose remaining balance was cleared via a confirmed handshake settlement.
 * **Default status**: Each new Settlement Period begins in **Open**.
 * **Allowed transitions**:
-  * Open → Settled (via Settle now, on-time or early).
-  * Open → Outstanding (automatic when the period end date passes with no Settlement).
-  * Outstanding → Settled (via Settle Outstanding; status on the receipt is **Settled Late**).
+  * Open → Outstanding (automatic when the period end date passes with a non-zero net balance after accounting for confirmed settlements).
+  * Open → Settled (automatic when the period end date passes with a zero net balance).
+  * Outstanding → Settled (via confirmed handshake settlement from the Settlements page).
 * **Cannot be reversed**: Once a period is Settled, the Settlement Receipt is permanent. Atlas does not support un-settling. Corrections must be handled outside Atlas (e.g. by logging a compensating Shared expense in a future period).
 * **Period boundaries**:
   * A new Open period begins automatically the day after the previous period ends, regardless of whether the previous period is Settled or Outstanding.
   * Expenses with `Logged date` falling inside a period belong to that period. The user cannot move expenses across periods.
-* **Initiation**: Either partner may initiate a Settlement; no second-partner confirmation is required at MVP. The other partner is notified in-app on next view (see § Global — Data Integrity for the cross-view propagation guarantee).
+* **Confirmation**: Both partners must confirm every settlement. Either partner may initiate a settlement request; the request remains pending until the other partner confirms or rejects it (see § 9b and § 9c).
 * **What does not change on Settlement**:
-  * Each expense's original `Logged date` is preserved on the Personal Ledger row.
   * Custom categories created during the period remain available going forward.
   * Display names remain the same on the receipt (the snapshot is implicit — the receipt records the partner's display name at time of settlement).
 
@@ -732,7 +733,7 @@ The Settings page contains all account, partnership, and notification preference
 ### **12e. Data Integrity**
 
 * User content (expenses, settlements, categories, partnership) is never modified without an explicit user action. The only background processes Atlas runs are:
-  * **Period rollover** — when a period's end date passes, the period transitions from **Open** to **Outstanding** if not yet settled. No expenses are moved; only the period status changes.
+  * **Period rollover** — when a period's end date passes, the period transitions from **Open** to **Outstanding** if the net balance (after accounting for all confirmed mid-period settlements) is non-zero. If the net balance is zero, the period simply closes. No expenses are ever moved by the rollover process.
   * **CSV import** — runs in the background while showing a progress indicator (see § 10).
 * Settlement Receipts are immutable. The Personal Ledger preserves the original `Logged date` of every entry — both immediate Personal entries and settled Shared entries.
 * Expenses logged via Telegram and expenses logged via the web app share one underlying record per expense; editing or deleting via the web reflects in any future Telegram confirmations and balance reads.
@@ -759,6 +760,5 @@ The following inconsistencies exist between sections of the input scoping docume
 
 * **Suggested category list varies** — Section 4 Feature 6 lists: "Food, Shopping, Subscriptions, Other, Investments, Grocery". Section 17 lists: "Food, Shopping, Subscriptions, Entertainment, Other, Investments, Grocery" (adds Entertainment). The SRD uses the union: "Food", "Grocery", "Shopping", "Subscriptions", "Entertainment", "Investments", "Other". Confirm intended list before implementation.
 * **CSV import of Shared expenses** — Section 4 Feature 6 states that CSV import supports "shared vs personal" expenses; Section 5 states that Shared Ledger contents go to both partners' ledgers via Settlement, but the input does not specify whether historical Shared imports propagate to the partner. The SRD treats imports as user-scoped only (no cross-partner propagation) per § 10a Scope. Confirm intended behavior before implementation.
-* **Settlement initiation authority** — Section 6 implies either partner may settle, but does not state whether the partner is notified or must confirm. The SRD treats Settlement as single-partner initiation with the other partner notified on next view (§ 9e). Confirm before implementation.
 * **Telegram default-Shared with no link** — Section 16 defines `spent …` as defaulting to Shared, but the inputs do not address what happens when the user has no linked partner. The SRD logs such expenses as Personal with an explanatory bot message (§ 8d). Confirm before implementation.
 * **Account names** — Section 5 Setup uses literal names "You" and "GF" for the two accounts; this is descriptive, not a system constraint. The SRD uses **Display Name** as a per-account user-provided value (§ 11a).
