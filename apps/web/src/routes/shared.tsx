@@ -17,15 +17,15 @@ import {
   useConfirmedSettlements,
 } from '@/lib/hooks'
 import { toast } from 'sonner'
-import { useAuth } from '@/lib/useAuth'
+import { useAuth } from '@/lib/use-auth'
 import type { Expense } from '@/lib/db/expense'
-import { ExpenseSummaryBar } from '@/components/expenses/ExpenseSummaryBar'
-import { ExpenseFilters } from '@/components/expenses/ExpenseFilters'
-import { ExpenseTable } from '@/components/expenses/ExpenseTable'
-import { AddExpenseDialog } from '@/components/expenses/AddExpenseDialog'
-import { ExpenseForm, type ExpenseFormValues } from '@/components/expenses/ExpenseForm'
-import { SettlePeriodDialog } from '@/components/expenses/SettlePeriodDialog'
-import { PendingSettlementBanner } from '@/components/expenses/PendingSettlementBanner'
+import { ExpenseSummaryBar } from '@/components/expenses/expense-summary-bar'
+import { ExpenseFilters } from '@/components/expenses/expense-filters'
+import { ExpenseTable } from '@/components/expenses/expense-table'
+import { AddExpenseDialog } from '@/components/expenses/add-expense-dialog'
+import { ExpenseForm, type ExpenseFormValues } from '@/components/expenses/expense-form'
+import { SettlePeriodDialog } from '@/components/expenses/settle-period-dialog'
+import { PendingSettlementBanner } from '@/components/expenses/pending-settlement-banner'
 import {
   Dialog,
   DialogContent,
@@ -33,10 +33,11 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { Button, buttonVariants } from '@/components/ui/button'
+import { Skeleton } from '@/components/ui/skeleton'
 import { cn } from '@/lib/utils'
-import { calcNetBalance } from '@/lib/utils/balanceCalc'
-import { formatCurrency } from '@/lib/utils/formatCurrency'
-import { formatPeriodLabel, formatTimeRemaining } from '@/lib/utils/periodLabel'
+import { calcNetBalance } from '@/lib/utils/balance-calc'
+import { formatCurrency } from '@/lib/utils/format-currency'
+import { formatPeriodLabel, formatTimeRemaining } from '@/lib/utils/period-label'
 
 export const Route = createFileRoute('/shared')({
   component: SharedLedger,
@@ -83,33 +84,41 @@ function SharedLedger() {
   async function handleAdd(values: ExpenseFormValues) {
     if (!partnership || !activePeriod) return
     const date = parseISO(values.date)
-    await createExpense.mutateAsync({
-      partnershipId: partnership.id,
-      scope: 'shared',
-      amount: Number(values.amount),
-      description: values.description.trim(),
-      category: values.category,
-      paidBy: values.paidBy,
-      source: 'manual',
-      date,
-      settlementPeriodId: activePeriod.id,
-    })
-    setAddOpen(false)
+    try {
+      await createExpense.mutateAsync({
+        partnershipId: partnership.id,
+        scope: 'shared',
+        amount: Number(values.amount),
+        description: values.description.trim(),
+        category: values.category,
+        paidBy: values.paidBy,
+        source: 'manual',
+        date,
+        settlementPeriodId: activePeriod.id,
+      })
+      setAddOpen(false)
+    } catch {
+      toast.error("Couldn't add expense. Try again.")
+    }
   }
 
   async function handleEdit(values: ExpenseFormValues) {
     if (!editingExpense || !activePeriod) return
     const date = parseISO(values.date)
-    await updateExpense.mutateAsync({
-      id: editingExpense.id,
-      data: {
-        amount: Number(values.amount),
-        description: values.description.trim(),
-        category: values.category,
-        date,
-      },
-    })
-    setEditingExpense(null)
+    try {
+      await updateExpense.mutateAsync({
+        id: editingExpense.id,
+        data: {
+          amount: Number(values.amount),
+          description: values.description.trim(),
+          category: values.category,
+          date,
+        },
+      })
+      setEditingExpense(null)
+    } catch {
+      toast.error("Couldn't update expense. Try again.")
+    }
   }
 
   async function handleInitiateSettle() {
@@ -201,14 +210,14 @@ function SharedLedger() {
     return (
       <div className="flex flex-col gap-6">
         <h1 className="font-display text-3xl">Shared Ledger</h1>
-        <div className="h-20 animate-pulse rounded-xl bg-muted" />
+        <Skeleton className="h-24 rounded-xl" />
         <div className="grid grid-cols-3 gap-4">
           {[0, 1, 2].map(i => (
-            <div key={i} className="h-24 animate-pulse rounded-xl bg-muted" />
+            <Skeleton key={i} className="h-28 rounded-xl" />
           ))}
         </div>
-        <div className="h-8 w-64 animate-pulse rounded-lg bg-muted" />
-        <div className="h-64 animate-pulse rounded-xl bg-muted" />
+        <Skeleton className="h-8 w-64" />
+        <Skeleton className="h-64 rounded-xl" />
       </div>
     )
   }

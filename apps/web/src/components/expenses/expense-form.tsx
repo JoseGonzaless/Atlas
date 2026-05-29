@@ -1,4 +1,4 @@
-import { useState } from 'react'
+﻿import { useState } from 'react'
 import { CalendarIcon } from 'lucide-react'
 import { format, parseISO } from 'date-fns'
 import { Input } from '@/components/ui/input'
@@ -9,7 +9,7 @@ import { Calendar } from '@/components/ui/calendar'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { EXPENSE_CATEGORIES } from '@/lib/db/expense'
 import { cn } from '@/lib/utils'
-import { formatAmountInput } from '@/lib/utils/formatAmountInput'
+import { formatAmountInput } from '@/lib/utils/format-amount-input'
 
 export interface ExpenseFormValues {
   amount: string

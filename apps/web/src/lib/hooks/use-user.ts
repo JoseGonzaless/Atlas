@@ -1,6 +1,6 @@
-import { useQuery } from '@tanstack/react-query'
+﻿import { useQuery } from '@tanstack/react-query'
 import { db } from '@/lib/db'
-import { queryKeys } from './queryKeys'
+import { queryKeys } from './query-keys'
 
 export function useUser(userId: string | undefined) {
   return useQuery({

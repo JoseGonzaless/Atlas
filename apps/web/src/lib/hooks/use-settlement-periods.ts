@@ -1,8 +1,8 @@
-import { useQuery } from '@tanstack/react-query'
+﻿import { useQuery } from '@tanstack/react-query'
 import { db } from '@/lib/db'
-import { useAuth } from '@/lib/useAuth'
+import { useAuth } from '@/lib/use-auth'
 import type { SettlementPeriodFilters } from '@/lib/db/settlement'
-import { queryKeys } from './queryKeys'
+import { queryKeys } from './query-keys'
 
 export function useSettlementPeriods(filters?: SettlementPeriodFilters) {
   const { user } = useAuth()

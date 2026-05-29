@@ -1,8 +1,8 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query'
+﻿import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { db } from '@/lib/db'
-import { useAuth } from '@/lib/useAuth'
+import { useAuth } from '@/lib/use-auth'
 import type { UpdateExpenseInput } from '@/lib/db/expense'
-import { queryKeys } from './queryKeys'
+import { queryKeys } from './query-keys'
 
 export function useUpdateExpense() {
   const queryClient = useQueryClient()

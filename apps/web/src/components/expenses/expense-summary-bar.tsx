@@ -1,8 +1,8 @@
-import { TrendingUp, TrendingDown, Minus } from 'lucide-react'
+﻿import { TrendingUp, TrendingDown, Minus } from 'lucide-react'
 import type { Expense } from '@/lib/db/expense'
 import type { Settlement } from '@/lib/db/settlement'
-import { calcBalance, calcNetBalance } from '@/lib/utils/balanceCalc'
-import { formatCurrency } from '@/lib/utils/formatCurrency'
+import { calcBalance, calcNetBalance } from '@/lib/utils/balance-calc'
+import { formatCurrency } from '@/lib/utils/format-currency'
 
 interface Props {
   expenses: Expense[]

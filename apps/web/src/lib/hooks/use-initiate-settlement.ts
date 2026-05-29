@@ -1,8 +1,8 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query'
+﻿import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { db } from '@/lib/db'
-import { useAuth } from '@/lib/useAuth'
+import { useAuth } from '@/lib/use-auth'
 import type { InitiateSettlementInput } from '@/lib/db/settlement'
-import { queryKeys } from './queryKeys'
+import { queryKeys } from './query-keys'
 
 export function useInitiateSettlement() {
   const queryClient = useQueryClient()

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+﻿import { useState, useEffect } from 'react'
 import { ChevronUp, ChevronDown, ChevronsUpDown } from 'lucide-react'
 import {
   Table,
@@ -16,7 +16,7 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from '@/components/ui/pagination'
-import { ExpenseRow } from './ExpenseRow'
+import { ExpenseRow } from './expense-row'
 import type { Expense } from '@/lib/db/expense'
 
 const PAGE_SIZE = 20

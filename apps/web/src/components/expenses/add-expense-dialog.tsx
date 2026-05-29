@@ -1,4 +1,4 @@
-import { Plus } from 'lucide-react'
+﻿import { Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -6,7 +6,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { ExpenseForm, type ExpenseFormValues } from './ExpenseForm'
+import { ExpenseForm, type ExpenseFormValues } from './expense-form'
 
 interface Props {
   open: boolean

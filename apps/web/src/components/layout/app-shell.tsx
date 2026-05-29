@@ -1,7 +1,7 @@
-import { Outlet } from '@tanstack/react-router'
-import { Sidebar } from './Sidebar'
+﻿import { Outlet } from '@tanstack/react-router'
+import { Sidebar } from './sidebar'
 import { Toaster } from '@/components/ui/sonner'
-import { DevUserSwitcher } from '@/components/dev/DevUserSwitcher'
+import { DevUserSwitcher } from '@/components/dev/dev-user-switcher'
 
 const IS_MOCK = import.meta.env.VITE_USE_MOCK === 'true'
 

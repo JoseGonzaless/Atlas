@@ -1,7 +1,7 @@
-import { Clock, HandshakeIcon } from 'lucide-react'
+﻿import { Clock, HandshakeIcon } from 'lucide-react'
 import type { Settlement } from '@/lib/db/settlement'
 import { Button } from '@/components/ui/button'
-import { formatCurrency } from '@/lib/utils/formatCurrency'
+import { formatCurrency } from '@/lib/utils/format-currency'
 
 interface Props {
   settlement: Settlement

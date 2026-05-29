@@ -1,9 +1,9 @@
-import { format } from 'date-fns'
+﻿import { format } from 'date-fns'
 import { Pencil, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { TableCell, TableRow } from '@/components/ui/table'
 import type { Expense } from '@/lib/db/expense'
-import { getCategoryColor } from '@/lib/utils/categoryColors'
+import { getCategoryColor } from '@/lib/utils/category-colors'
 
 interface Props {
   expense: Expense

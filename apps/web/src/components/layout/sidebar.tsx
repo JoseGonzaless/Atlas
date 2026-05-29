@@ -1,4 +1,4 @@
-import { useState } from 'react'
+﻿import { useState } from 'react'
 import { Link } from '@tanstack/react-router'
 import {
   LayoutGrid,
@@ -11,7 +11,7 @@ import {
   Moon,
 } from 'lucide-react'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
-import { useTheme } from '@/lib/useTheme'
+import { useTheme } from '@/lib/use-theme'
 
 const navItems = [
   { to: '/', label: 'Dashboard', icon: LayoutGrid },

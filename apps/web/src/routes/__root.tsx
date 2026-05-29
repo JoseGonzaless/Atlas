@@ -1,9 +1,9 @@
-import { useEffect } from 'react'
+﻿import { useEffect } from 'react'
 import { createRootRoute, Outlet, useNavigate, useRouterState } from '@tanstack/react-router'
-import { AppShell } from '@/components/layout/AppShell'
+import { AppShell } from '@/components/layout/app-shell'
 import { Skeleton } from '@/components/ui/skeleton'
 import { TooltipProvider } from '@/components/ui/tooltip'
-import { useAuth } from '../lib/useAuth'
+import { useAuth } from '../lib/use-auth'
 
 function RootComponent() {
   const { user, loading } = useAuth()

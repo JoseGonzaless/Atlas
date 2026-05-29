@@ -1,16 +1,15 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query'
+﻿import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { db } from '@/lib/db'
-import { useAuth } from '@/lib/useAuth'
-import type { CreateExpenseInput } from '@/lib/db/expense'
-import { queryKeys } from './queryKeys'
+import { useAuth } from '@/lib/use-auth'
+import { queryKeys } from './query-keys'
 
-export function useCreateExpense() {
+export function useDeleteExpense() {
   const queryClient = useQueryClient()
   const { user } = useAuth()
   const partnershipId = user?.partnershipId
 
   return useMutation({
-    mutationFn: (data: CreateExpenseInput) => db.createExpense(data),
+    mutationFn: (id: string) => db.deleteExpense(id),
     onSuccess: () => {
       if (!partnershipId) return
       queryClient.invalidateQueries({ queryKey: queryKeys.expenses.all(partnershipId) })

@@ -1,7 +1,7 @@
-import { useState, useRef, useEffect } from 'react'
+﻿import { useState, useRef, useEffect } from 'react'
 import { toast } from 'sonner'
 import type { Expense } from '@/lib/db/expense'
-import { useDeleteExpense } from './useDeleteExpense'
+import { useDeleteExpense } from './use-delete-expense'
 
 export function useDeleteWithUndo(expenses: Expense[]) {
   const deleteExpense = useDeleteExpense()
@@ -12,11 +12,11 @@ export function useDeleteWithUndo(expenses: Expense[]) {
   // flicker where the item briefly reappears between the mutation resolving and
   // React Query invalidating the expenses list.
   useEffect(() => {
-    if (pendingDeleteIds.size === 0) return
     const expenseIds = new Set(expenses.map(e => e.id))
-    const stale = [...pendingDeleteIds].filter(id => !expenseIds.has(id))
-    if (stale.length === 0) return
     setPendingDeleteIds(prev => {
+      if (prev.size === 0) return prev
+      const stale = [...prev].filter(id => !expenseIds.has(id))
+      if (stale.length === 0) return prev
       const s = new Set(prev)
       stale.forEach(id => s.delete(id))
       return s

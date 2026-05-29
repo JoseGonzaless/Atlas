@@ -1,4 +1,4 @@
-import { Button } from '@/components/ui/button'
+﻿import { Button } from '@/components/ui/button'
 import {
   Dialog,
   DialogContent,
@@ -7,9 +7,9 @@ import {
 } from '@/components/ui/dialog'
 import type { Expense } from '@/lib/db/expense'
 import type { SettlementPeriod } from '@/lib/db/settlement'
-import { calcBalance } from '@/lib/utils/balanceCalc'
-import { formatCurrency } from '@/lib/utils/formatCurrency'
-import { formatPeriodLabel } from '@/lib/utils/periodLabel'
+import { calcBalance } from '@/lib/utils/balance-calc'
+import { formatCurrency } from '@/lib/utils/format-currency'
+import { formatPeriodLabel } from '@/lib/utils/period-label'
 
 interface Props {
   open: boolean

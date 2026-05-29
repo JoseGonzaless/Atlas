@@ -1,7 +1,7 @@
-import { useQuery } from '@tanstack/react-query'
+﻿import { useQuery } from '@tanstack/react-query'
 import { db } from '@/lib/db'
-import { useAuth } from '@/lib/useAuth'
-import { queryKeys } from './queryKeys'
+import { useAuth } from '@/lib/use-auth'
+import { queryKeys } from './query-keys'
 
 export function usePendingSettlement(periodId: string | undefined) {
   const { user } = useAuth()

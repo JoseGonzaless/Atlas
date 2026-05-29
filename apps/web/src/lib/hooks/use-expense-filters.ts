@@ -1,7 +1,7 @@
-import { useState, useMemo } from 'react'
+﻿import { useState, useMemo } from 'react'
 import { parseISO, startOfDay, endOfDay } from 'date-fns'
 import type { Expense } from '@/lib/db/expense'
-import type { FilterState } from '@/components/expenses/ExpenseFilters'
+import type { FilterState } from '@/components/expenses/expense-filters'
 
 const emptyFilters: FilterState = {
   search: '', category: '', paidBy: '', dateFrom: '', dateTo: '', amountMin: '', amountMax: '',
