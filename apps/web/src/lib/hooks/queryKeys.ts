@@ -19,5 +19,9 @@ export const queryKeys = {
   settlements: {
     all: (partnershipId: string) => ['settlements', partnershipId] as const,
     detail: (settlementId: string) => ['settlements', 'detail', settlementId] as const,
+    byPeriod: (partnershipId: string, periodId: string) =>
+      ['settlements', partnershipId, 'period', periodId] as const,
+    pending: (partnershipId: string, periodId: string) =>
+      ['settlements', partnershipId, 'pending', periodId] as const,
   },
 }
