@@ -3,8 +3,15 @@ import type { UpdateUserInput } from './user'
 import type { Partnership, PartnershipInvite, PartnershipInviteStatus, CreatePartnershipInviteInput } from './partnership'
 import type { CreatePartnershipInput, UpdatePartnershipInput } from './partnership'
 import type { Expense, ExpenseFilters, CreateExpenseInput, UpdateExpenseInput } from './expense'
-import type { SettlementPeriod, Settlement, SettlementStatus, CreateSettlementPeriodInput } from './settlement'
-import type { SettlementPeriodFilters, SettlePeriodInput } from './settlement'
+import type {
+  SettlementPeriod,
+  SettlementPeriodStatus,
+  Settlement,
+  SettlementPeriodFilters,
+  CreateSettlementPeriodInput,
+  InitiateSettlementInput,
+  RespondToSettlementInput,
+} from './settlement'
 
 // ── IDatabase ─────────────────────────────────────────────────────────────────
 
@@ -47,21 +54,25 @@ export interface IDatabase {
     filters?: SettlementPeriodFilters
   ): Promise<SettlementPeriod[]>
   getSettlementPeriod(id: string): Promise<SettlementPeriod>
-  // Returns null when no period is currently open (e.g. partnership just created)
+  // Returns null when no period is currently open
   getActiveSettlementPeriod(partnershipId: string): Promise<SettlementPeriod | null>
   createSettlementPeriod(data: CreateSettlementPeriodInput): Promise<SettlementPeriod>
   // Used by the background period-rollover process (open → outstanding)
   updateSettlementPeriodStatus(
     id: string,
-    status: SettlementStatus
+    status: SettlementPeriodStatus
   ): Promise<SettlementPeriod>
 
   // ── Settlements ───────────────────────────────────────────────────────────
 
   getSettlements(partnershipId: string): Promise<Settlement[]>
   getSettlement(id: string): Promise<Settlement>
-  // Atomic: creates the Settlement record, stamps settledAt on all included
-  // Expenses, and transitions the SettlementPeriod to 'settled' in one operation.
-  // If any step fails, no changes are persisted (SRD §12c).
-  settlePeriod(data: SettlePeriodInput): Promise<Settlement>
+  // Returns confirmed settlements for a specific period (used for running net calculation)
+  getConfirmedSettlements(partnershipId: string, periodId: string): Promise<Settlement[]>
+  // Returns the single pending settlement for a period, or null if none
+  getPendingSettlement(partnershipId: string, periodId: string): Promise<Settlement | null>
+  // Creates a pending settlement — other partner must confirm before it counts
+  initiateSettlement(data: InitiateSettlementInput): Promise<Settlement>
+  // Confirms or rejects a pending settlement
+  respondToSettlement(data: RespondToSettlementInput): Promise<Settlement>
 }

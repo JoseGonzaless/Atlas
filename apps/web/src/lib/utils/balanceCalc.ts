@@ -1,4 +1,5 @@
 import type { Expense } from '../db/expense'
+import type { Settlement } from '../db/settlement'
 
 export interface BalanceResult {
   userPaid: number
@@ -45,4 +46,40 @@ export function calcBalance(expenses: Expense[], currentUserId: string): Balance
   }
 
   return { userPaid, partnerPaid, totalShared, userShare, balanceAmount, direction }
+}
+
+// Returns the running net balance after subtracting confirmed mid-period settlements.
+// "You paid" and "Total spent" are always gross; only "Net balance" adjusts.
+export function calcNetBalance(
+  expenses: Expense[],
+  currentUserId: string,
+  confirmedSettlements: Settlement[],
+): BalanceResult {
+  const gross = calcBalance(expenses, currentUserId)
+
+  if (gross.direction === 'none' || confirmedSettlements.length === 0) return gross
+
+  // signed net: positive = partner owes user, negative = user owes partner
+  let signedNet = (gross.userPaid - gross.partnerPaid) / 2
+
+  for (const s of confirmedSettlements) {
+    if (s.fromUserId === currentUserId) {
+      signedNet += s.amount  // user paid partner — reduces user's debt
+    } else {
+      signedNet -= s.amount  // partner paid user — reduces partner's debt
+    }
+  }
+
+  const balanceAmount = Math.abs(signedNet)
+  let direction: BalanceResult['direction']
+
+  if (balanceAmount < 0.005) {
+    direction = 'even'
+  } else if (signedNet > 0) {
+    direction = 'owed'
+  } else {
+    direction = 'owes'
+  }
+
+  return { ...gross, balanceAmount, direction }
 }

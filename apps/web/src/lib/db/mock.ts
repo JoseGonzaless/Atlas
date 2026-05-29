@@ -16,11 +16,12 @@ import type {
 } from './expense'
 import type {
   SettlementPeriod,
+  SettlementPeriodStatus,
   Settlement,
-  SettlementStatus,
-  CreateSettlementPeriodInput,
   SettlementPeriodFilters,
-  SettlePeriodInput,
+  CreateSettlementPeriodInput,
+  InitiateSettlementInput,
+  RespondToSettlementInput,
 } from './settlement'
 import {
   subDays,
@@ -132,9 +133,11 @@ let settlements: Settlement[] = [
     fromUserId: 'user-2',
     toUserId: 'user-1',
     amount: 88.37,
-    status: 'on-time',
-    daysOverdue: null,
-    settledAt: s1SettledAt,
+    status: 'confirmed',
+    initiatedBy: 'user-1',
+    confirmedBy: 'user-2',
+    initiatedAt: subDays(s1SettledAt, 0),
+    confirmedAt: s1SettledAt,
     partnerDisplayNameSnapshot: 'Rose',
     expenseIds: ['e-1', 'e-2', 'e-3', 'e-4', 'e-5', 'e-6'],
   },
@@ -145,9 +148,11 @@ let settlements: Settlement[] = [
     fromUserId: 'user-1',
     toUserId: 'user-2',
     amount: 5.56,
-    status: 'early',
-    daysOverdue: null,
-    settledAt: s2SettledAt,
+    status: 'confirmed',
+    initiatedBy: 'user-2',
+    confirmedBy: 'user-1',
+    initiatedAt: subDays(s2SettledAt, 0),
+    confirmedAt: s2SettledAt,
     partnerDisplayNameSnapshot: 'Rose',
     expenseIds: ['e-7', 'e-8', 'e-9', 'e-10', 'e-11', 'e-12'],
   },
@@ -331,7 +336,7 @@ export class MockDatabase implements IDatabase {
     return period
   }
 
-  async updateSettlementPeriodStatus(id: string, status: SettlementStatus): Promise<SettlementPeriod> {
+  async updateSettlementPeriodStatus(id: string, status: SettlementPeriodStatus): Promise<SettlementPeriod> {
     await delay(80)
     const idx = settlementPeriods.findIndex(p => p.id === id)
     if (idx === -1) throw new Error(`Not found: ${id}`)
@@ -343,7 +348,23 @@ export class MockDatabase implements IDatabase {
     await delay(80)
     return settlements
       .filter(s => s.partnershipId === partnershipId)
-      .sort((a, b) => b.settledAt.getTime() - a.settledAt.getTime())
+      .sort((a, b) => b.initiatedAt.getTime() - a.initiatedAt.getTime())
+  }
+
+  async getConfirmedSettlements(partnershipId: string, periodId: string): Promise<Settlement[]> {
+    await delay(80)
+    return settlements.filter(
+      s => s.partnershipId === partnershipId && s.periodId === periodId && s.status === 'confirmed',
+    )
+  }
+
+  async getPendingSettlement(partnershipId: string, periodId: string): Promise<Settlement | null> {
+    await delay(80)
+    return (
+      settlements.find(
+        s => s.partnershipId === partnershipId && s.periodId === periodId && s.status === 'pending',
+      ) ?? null
+    )
   }
 
   async getSettlement(id: string): Promise<Settlement> {
@@ -353,23 +374,21 @@ export class MockDatabase implements IDatabase {
     return settlement
   }
 
-  async settlePeriod(data: SettlePeriodInput): Promise<Settlement> {
+  async initiateSettlement(data: InitiateSettlementInput): Promise<Settlement> {
     await delay(80)
-    const periodIdx = settlementPeriods.findIndex(p => p.id === data.periodId)
-    if (periodIdx === -1) throw new Error(`Not found: ${data.periodId}`)
-    if (settlementPeriods[periodIdx].status === 'settled')
-      throw new Error(`Period ${data.periodId} is already settled`)
+    const period = settlementPeriods.find(p => p.id === data.periodId)
+    if (!period) throw new Error(`Not found: ${data.periodId}`)
+    if (period.status !== 'open' && period.status !== 'outstanding')
+      throw new Error(`Period ${data.periodId} is not settleable`)
 
-    const periodExpenses = expenses.filter(e => e.settlementPeriodId === data.periodId)
-    const expenseIds = periodExpenses.map(e => e.id)
+    const existing = settlements.find(
+      s => s.periodId === data.periodId && s.status === 'pending',
+    )
+    if (existing) throw new Error(`A pending settlement already exists for period ${data.periodId}`)
 
-    // Mutate only after all preconditions pass to preserve atomicity
-    const settledAt = new Date()
-    for (const e of periodExpenses) {
-      const eidx = expenses.findIndex(x => x.id === e.id)
-      expenses[eidx] = { ...expenses[eidx], settledAt }
-    }
-    settlementPeriods[periodIdx] = { ...settlementPeriods[periodIdx], status: 'settled' }
+    const expenseIds = expenses
+      .filter(e => e.settlementPeriodId === data.periodId)
+      .map(e => e.id)
 
     const settlement: Settlement = {
       id: crypto.randomUUID(),
@@ -378,15 +397,34 @@ export class MockDatabase implements IDatabase {
       fromUserId: data.fromUserId,
       toUserId: data.toUserId,
       amount: data.amount,
-      status: data.status,
-      daysOverdue: data.daysOverdue,
-      settledAt,
+      status: 'pending',
+      initiatedBy: data.initiatedBy,
+      confirmedBy: null,
+      initiatedAt: new Date(),
+      confirmedAt: null,
       partnerDisplayNameSnapshot: data.partnerDisplayNameSnapshot,
       expenseIds,
       notes: data.notes,
     }
     settlements.push(settlement)
     return settlement
+  }
+
+  async respondToSettlement(data: RespondToSettlementInput): Promise<Settlement> {
+    await delay(80)
+    const idx = settlements.findIndex(s => s.id === data.settlementId)
+    if (idx === -1) throw new Error(`Not found: ${data.settlementId}`)
+    if (settlements[idx].status !== 'pending')
+      throw new Error(`Settlement ${data.settlementId} is not pending`)
+
+    const confirmedAt = new Date()
+    settlements[idx] = {
+      ...settlements[idx],
+      status: data.response,
+      confirmedBy: data.respondedBy,
+      confirmedAt,
+    }
+    return settlements[idx]
   }
 }
 
