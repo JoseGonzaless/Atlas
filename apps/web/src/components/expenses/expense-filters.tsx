@@ -26,9 +26,10 @@ interface Props {
   children?: ReactNode
   periodStart?: Date
   periodEnd?: Date
+  hidePaidBy?: boolean
 }
 
-export function ExpenseFilters({ filters, users, onChange, children, periodStart, periodEnd }: Props) {
+export function ExpenseFilters({ filters, users, onChange, children, periodStart, periodEnd, hidePaidBy }: Props) {
   const hasActive = filters.search || filters.category || filters.paidBy || filters.dateFrom || filters.dateTo || filters.amountMin || filters.amountMax
   const [dateFromOpen, setDateFromOpen] = useState(false)
   const [dateToOpen, setDateToOpen] = useState(false)
@@ -62,18 +63,20 @@ export function ExpenseFilters({ filters, users, onChange, children, periodStart
         ))}
       </NativeSelect>
 
-      <NativeSelect
-        value={filters.paidBy}
-        onChange={e => onChange({ ...filters, paidBy: e.target.value })}
-        aria-label="Filter by payer"
-      >
-        <NativeSelectOption value="">All payers</NativeSelectOption>
-        {users.map(u => (
-          <NativeSelectOption key={u.id} value={u.id}>
-            {u.displayName}
-          </NativeSelectOption>
-        ))}
-      </NativeSelect>
+      {!hidePaidBy && (
+        <NativeSelect
+          value={filters.paidBy}
+          onChange={e => onChange({ ...filters, paidBy: e.target.value })}
+          aria-label="Filter by payer"
+        >
+          <NativeSelectOption value="">All payers</NativeSelectOption>
+          {users.map(u => (
+            <NativeSelectOption key={u.id} value={u.id}>
+              {u.displayName}
+            </NativeSelectOption>
+          ))}
+        </NativeSelect>
+      )}
 
       <div className="flex items-center gap-1.5">
         <Popover open={dateFromOpen} onOpenChange={setDateFromOpen}>

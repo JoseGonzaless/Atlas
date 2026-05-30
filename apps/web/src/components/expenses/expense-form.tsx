@@ -27,6 +27,7 @@ interface Props {
   onCancel: () => void
   isLoading?: boolean
   editMode?: boolean
+  lockPaidBy?: boolean
   periodStart?: Date
   periodEnd?: Date
 }
@@ -54,6 +55,7 @@ export function ExpenseForm({
   onCancel,
   isLoading,
   editMode,
+  lockPaidBy,
   periodStart,
   periodEnd,
 }: Props) {
@@ -192,7 +194,7 @@ export function ExpenseForm({
             id="ef-paidby"
             value={values.paidBy}
             onChange={e => set('paidBy', e.target.value)}
-            disabled={editMode}
+            disabled={editMode || lockPaidBy}
             aria-invalid={!!errors.paidBy}
             className="w-full"
           >

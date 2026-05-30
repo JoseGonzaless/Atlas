@@ -1,4 +1,4 @@
-﻿import { useState, useMemo } from 'react'
+import { useState, useMemo, useRef } from 'react'
 import { parseISO, startOfDay, endOfDay } from 'date-fns'
 import type { Expense } from '@/lib/db/expense'
 import type { FilterState } from '@/components/expenses/expense-filters'
@@ -7,8 +7,14 @@ const emptyFilters: FilterState = {
   search: '', category: '', paidBy: '', dateFrom: '', dateTo: '', amountMin: '', amountMax: '',
 }
 
-export function useExpenseFilters(expenses: Expense[], pendingDeleteIds: Set<string>) {
-  const [filters, setFilters] = useState<FilterState>(emptyFilters)
+export function useExpenseFilters(
+  expenses: Expense[],
+  pendingDeleteIds: Set<string>,
+  initialFilters?: Partial<FilterState>,
+) {
+  const defaultFiltersRef = useRef<FilterState>({ ...emptyFilters, ...initialFilters })
+  const defaultFilters = defaultFiltersRef.current
+  const [filters, setFilters] = useState<FilterState>(defaultFilters)
 
   const filtered = useMemo(() => {
     return expenses.filter(e => {
@@ -27,12 +33,11 @@ export function useExpenseFilters(expenses: Expense[], pendingDeleteIds: Set<str
     })
   }, [expenses, filters, pendingDeleteIds])
 
-  const hasActiveFilters = !!(
-    filters.search || filters.category || filters.paidBy ||
-    filters.dateFrom || filters.dateTo || filters.amountMin || filters.amountMax
+  const hasActiveFilters = (Object.keys(defaultFilters) as (keyof FilterState)[]).some(
+    k => filters[k] !== defaultFilters[k]
   )
 
-  function resetFilters() { setFilters(emptyFilters) }
+  function resetFilters() { setFilters(defaultFilters) }
 
   return { filters, setFilters, filtered, hasActiveFilters, resetFilters }
 }

@@ -30,6 +30,7 @@ interface Props {
   currentUserId: string
   onEdit: (expense: Expense) => void
   onDelete: (id: string) => void
+  hiddenColumns?: ('paidBy' | 'status')[]
 }
 
 function sorted(
@@ -64,7 +65,7 @@ const columns: { field: SortField; label: string }[] = [
   { field: 'date', label: 'Date' },
 ]
 
-export function ExpenseTable({ expenses, userMap, currentUserId, onEdit, onDelete }: Props) {
+export function ExpenseTable({ expenses, userMap, currentUserId, onEdit, onDelete, hiddenColumns }: Props) {
   const [sortField, setSortField] = useState<SortField>('date')
   const [sortDir, setSortDir] = useState<SortDir>('desc')
   const [page, setPage] = useState(1)
@@ -102,19 +103,21 @@ export function ExpenseTable({ expenses, userMap, currentUserId, onEdit, onDelet
         <Table>
           <TableHeader>
             <TableRow className="hover:bg-transparent">
-              {columns.map(({ field, label }) => (
-                <TableHead key={field}>
-                  <button
-                    type="button"
-                    onClick={() => handleSort(field)}
-                    className="inline-flex cursor-pointer select-none items-center hover:text-foreground transition-colors"
-                  >
-                    {label}
-                    <SortIndicator active={sortField === field} dir={sortDir} />
-                  </button>
-                </TableHead>
-              ))}
-              <TableHead>Status</TableHead>
+              {columns
+                .filter(({ field }) => !hiddenColumns?.includes(field as 'paidBy' | 'status'))
+                .map(({ field, label }) => (
+                  <TableHead key={field}>
+                    <button
+                      type="button"
+                      onClick={() => handleSort(field)}
+                      className="inline-flex cursor-pointer select-none items-center hover:text-foreground transition-colors"
+                    >
+                      {label}
+                      <SortIndicator active={sortField === field} dir={sortDir} />
+                    </button>
+                  </TableHead>
+                ))}
+              {!hiddenColumns?.includes('status') && <TableHead>Status</TableHead>}
               <TableHead />
             </TableRow>
           </TableHeader>
@@ -127,6 +130,7 @@ export function ExpenseTable({ expenses, userMap, currentUserId, onEdit, onDelet
                 currentUserId={currentUserId}
                 onEdit={() => onEdit(expense)}
                 onDelete={() => onDelete(expense.id)}
+                hiddenColumns={hiddenColumns}
               />
             ))}
           </TableBody>

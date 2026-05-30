@@ -11,9 +11,10 @@ interface Props {
   currentUserId: string
   onEdit: () => void
   onDelete: () => void
+  hiddenColumns?: ('paidBy' | 'status')[]
 }
 
-export function ExpenseRow({ expense, paidByName, currentUserId, onEdit, onDelete }: Props) {
+export function ExpenseRow({ expense, paidByName, currentUserId, onEdit, onDelete, hiddenColumns }: Props) {
   const colorClass = getCategoryColor(expense.category)
   const isSettled = !!expense.settledAt
   const canModify = !isSettled && expense.paidBy === currentUserId
@@ -31,21 +32,25 @@ export function ExpenseRow({ expense, paidByName, currentUserId, onEdit, onDelet
           {expense.category}
         </span>
       </TableCell>
-      <TableCell className="text-muted-foreground">{paidByName}</TableCell>
+      {!hiddenColumns?.includes('paidBy') && (
+        <TableCell className="text-muted-foreground">{paidByName}</TableCell>
+      )}
       <TableCell className="text-muted-foreground tabular-nums">
         {format(expense.date, 'MMM d, yyyy')}
       </TableCell>
-      <TableCell>
-        {isSettled ? (
-          <span className="inline-flex items-center rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">
-            Settled
-          </span>
-        ) : (
-          <span className="inline-flex items-center rounded-full bg-positive/15 text-positive px-2 py-0.5 text-xs">
-            Open
-          </span>
-        )}
-      </TableCell>
+      {!hiddenColumns?.includes('status') && (
+        <TableCell>
+          {isSettled ? (
+            <span className="inline-flex items-center rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">
+              Settled
+            </span>
+          ) : (
+            <span className="inline-flex items-center rounded-full bg-positive/15 text-positive px-2 py-0.5 text-xs">
+              Open
+            </span>
+          )}
+        </TableCell>
+      )}
       <TableCell className="text-right">
         <div className="flex justify-end gap-1">
           <Button

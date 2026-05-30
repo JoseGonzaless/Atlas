@@ -14,11 +14,12 @@ interface Props {
   users: { id: string; displayName: string }[]
   onSubmit: (values: ExpenseFormValues) => void
   isLoading?: boolean
+  lockPaidBy?: boolean
   periodStart?: Date
   periodEnd?: Date
 }
 
-export function AddExpenseDialog({ open, onOpenChange, users, onSubmit, isLoading, periodStart, periodEnd }: Props) {
+export function AddExpenseDialog({ open, onOpenChange, users, onSubmit, isLoading, lockPaidBy, periodStart, periodEnd }: Props) {
   return (
     <>
       <Button size="sm" onClick={() => onOpenChange(true)}>
@@ -36,6 +37,7 @@ export function AddExpenseDialog({ open, onOpenChange, users, onSubmit, isLoadin
             onSubmit={onSubmit}
             onCancel={() => onOpenChange(false)}
             isLoading={isLoading}
+            lockPaidBy={lockPaidBy}
             periodStart={periodStart}
             periodEnd={periodEnd}
           />

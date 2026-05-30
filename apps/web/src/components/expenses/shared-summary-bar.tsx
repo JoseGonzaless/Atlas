@@ -1,4 +1,4 @@
-﻿import { TrendingUp, TrendingDown, Minus } from 'lucide-react'
+import { TrendingUp, TrendingDown, Minus } from 'lucide-react'
 import type { Expense } from '@/lib/db/expense'
 import type { Settlement } from '@/lib/db/settlement'
 import { calcBalance, calcNetBalance } from '@/lib/utils/balance-calc'
@@ -11,7 +11,7 @@ interface Props {
   confirmedSettlements?: Settlement[]
 }
 
-export function ExpenseSummaryBar({ expenses, currentUserId, partnerName, confirmedSettlements = [] }: Props) {
+export function SharedSummaryBar({ expenses, currentUserId, partnerName, confirmedSettlements = [] }: Props) {
   const { userPaid, partnerPaid, totalShared } = calcBalance(expenses, currentUserId)
   const { balanceAmount, direction } = calcNetBalance(expenses, currentUserId, confirmedSettlements)
 

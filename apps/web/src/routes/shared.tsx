@@ -19,7 +19,7 @@ import {
 import { toast } from 'sonner'
 import { useAuth } from '@/lib/use-auth'
 import type { Expense } from '@/lib/db/expense'
-import { ExpenseSummaryBar } from '@/components/expenses/expense-summary-bar'
+import { SharedSummaryBar } from '@/components/expenses/shared-summary-bar'
 import { ExpenseFilters } from '@/components/expenses/expense-filters'
 import { ExpenseTable } from '@/components/expenses/expense-table'
 import { AddExpenseDialog } from '@/components/expenses/add-expense-dialog'
@@ -287,7 +287,7 @@ function SharedLedger() {
           )}
 
           {/* Totals strip — gross amounts + net adjusted for confirmed settlements */}
-          <ExpenseSummaryBar
+          <SharedSummaryBar
             expenses={filtered}
             currentUserId={authUser?.id ?? ''}
             partnerName={partnerUser?.displayName ?? 'Partner'}
