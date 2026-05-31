@@ -28,9 +28,10 @@ interface Props {
   expenses: Expense[]
   userMap: Record<string, string>
   currentUserId: string
-  onEdit: (expense: Expense) => void
-  onDelete: (id: string) => void
+  onEdit?: (expense: Expense) => void
+  onDelete?: (id: string) => void
   hiddenColumns?: ('paidBy' | 'status')[]
+  readOnly?: boolean
 }
 
 function sorted(
@@ -65,7 +66,7 @@ const columns: { field: SortField; label: string }[] = [
   { field: 'date', label: 'Date' },
 ]
 
-export function ExpenseTable({ expenses, userMap, currentUserId, onEdit, onDelete, hiddenColumns }: Props) {
+export function ExpenseTable({ expenses, userMap, currentUserId, onEdit, onDelete, hiddenColumns, readOnly }: Props) {
   const [sortField, setSortField] = useState<SortField>('date')
   const [sortDir, setSortDir] = useState<SortDir>('desc')
   const [page, setPage] = useState(1)
@@ -118,7 +119,7 @@ export function ExpenseTable({ expenses, userMap, currentUserId, onEdit, onDelet
                   </TableHead>
                 ))}
               {!hiddenColumns?.includes('status') && <TableHead>Status</TableHead>}
-              <TableHead />
+              {!readOnly && <TableHead />}
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -128,9 +129,10 @@ export function ExpenseTable({ expenses, userMap, currentUserId, onEdit, onDelet
                 expense={expense}
                 paidByName={userMap[expense.paidBy] ?? expense.paidBy}
                 currentUserId={currentUserId}
-                onEdit={() => onEdit(expense)}
-                onDelete={() => onDelete(expense.id)}
+                onEdit={() => onEdit?.(expense)}
+                onDelete={() => onDelete?.(expense.id)}
                 hiddenColumns={hiddenColumns}
+                readOnly={readOnly}
               />
             ))}
           </TableBody>

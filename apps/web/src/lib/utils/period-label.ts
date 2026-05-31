@@ -3,7 +3,7 @@ import type { SettlementPeriod } from '../db/settlement'
 
 export function formatPeriodLabel(period: SettlementPeriod): string {
   const start = format(period.startDate, 'MMM d')
-  const end = format(period.endDate, 'MMM d')
+  const end = format(period.endDate, 'MMM d, yyyy')
   return `Week of ${start} – ${end}`
 }
 

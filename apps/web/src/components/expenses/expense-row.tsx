@@ -9,12 +9,13 @@ interface Props {
   expense: Expense
   paidByName: string
   currentUserId: string
-  onEdit: () => void
-  onDelete: () => void
+  onEdit?: () => void
+  onDelete?: () => void
   hiddenColumns?: ('paidBy' | 'status')[]
+  readOnly?: boolean
 }
 
-export function ExpenseRow({ expense, paidByName, currentUserId, onEdit, onDelete, hiddenColumns }: Props) {
+export function ExpenseRow({ expense, paidByName, currentUserId, onEdit, onDelete, hiddenColumns, readOnly }: Props) {
   const colorClass = getCategoryColor(expense.category)
   const isSettled = !!expense.settledAt
   const canModify = !isSettled && expense.paidBy === currentUserId
@@ -51,29 +52,31 @@ export function ExpenseRow({ expense, paidByName, currentUserId, onEdit, onDelet
           )}
         </TableCell>
       )}
-      <TableCell className="text-right">
-        <div className="flex justify-end gap-1">
-          <Button
-            variant="ghost"
-            size="icon-sm"
-            onClick={onEdit}
-            disabled={!canModify}
-            aria-label="Edit expense"
-          >
-            <Pencil />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon-sm"
-            onClick={onDelete}
-            disabled={!canModify}
-            aria-label="Delete expense"
-            className="text-destructive hover:text-destructive hover:bg-destructive/10"
-          >
-            <Trash2 />
-          </Button>
-        </div>
-      </TableCell>
+      {!readOnly && (
+        <TableCell className="text-right">
+          <div className="flex justify-end gap-1">
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              onClick={onEdit}
+              disabled={!canModify}
+              aria-label="Edit expense"
+            >
+              <Pencil />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              onClick={onDelete}
+              disabled={!canModify}
+              aria-label="Delete expense"
+              className="text-destructive hover:text-destructive hover:bg-destructive/10"
+            >
+              <Trash2 />
+            </Button>
+          </div>
+        </TableCell>
+      )}
     </TableRow>
   )
 }

@@ -267,7 +267,11 @@ function SharedLedger() {
             </div>
             {/* Settle now — hidden when there's nothing to settle or a request is pending */}
             {expenses.length > 0 && !pendingSettlement && (
-              <Button size="sm" variant="outline" onClick={() => setSettleOpen(true)}>
+              <Button
+                size="sm"
+                className="bg-shared text-shared-foreground hover:bg-shared/90"
+                onClick={() => setSettleOpen(true)}
+              >
                 Settle now
               </Button>
             )}

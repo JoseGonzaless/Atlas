@@ -46,6 +46,7 @@ const sp4End = endOfWeek(NOW, { weekStartsOn: 1 })
 
 const s1SettledAt = sp1End
 const s2SettledAt = subDays(sp2End, 2)
+const s3SettledAt = subDays(NOW, 1)
 
 const inviteCreatedAt = subWeeks(NOW, 5)
 
@@ -110,8 +111,8 @@ let expenses: Expense[] = [
   { id: 'e-15', partnershipId: 'p-1', scope: 'shared',   amount: 22.00,  description: 'Bowling night',           category: 'entertainment', paidBy: 'user-1', source: 'manual', date: subDays(NOW, 15), createdAt: subDays(NOW, 15), settlementPeriodId: 'sp-3', settledAt: null },
   { id: 'e-16', partnershipId: 'p-1', scope: 'shared',   amount: 75.00,  description: 'Household supplies',      category: 'other',         paidBy: 'user-2', source: 'manual', date: subDays(NOW, 14), createdAt: subDays(NOW, 14), settlementPeriodId: 'sp-3', settledAt: null },
   // sp-4 — open
-  { id: 'e-17', partnershipId: 'p-1', scope: 'shared',   amount: 73.60,  description: "Trader Joe's",            category: 'grocery',       paidBy: 'user-1', source: 'manual', date: subDays(NOW, 3),  createdAt: subDays(NOW, 3),  settlementPeriodId: 'sp-4', settledAt: null },
-  { id: 'e-18', partnershipId: 'p-1', scope: 'shared',   amount: 55.00,  description: 'Dinner out',              category: 'food',          paidBy: 'user-2', source: 'bot',    date: subDays(NOW, 2),  createdAt: subDays(NOW, 2),  settlementPeriodId: 'sp-4', settledAt: null },
+  { id: 'e-17', partnershipId: 'p-1', scope: 'shared',   amount: 73.60,  description: "Trader Joe's",            category: 'grocery',       paidBy: 'user-1', source: 'manual', date: subDays(NOW, 3),  createdAt: subDays(NOW, 3),  settlementPeriodId: 'sp-4', settledAt: s3SettledAt },
+  { id: 'e-18', partnershipId: 'p-1', scope: 'shared',   amount: 55.00,  description: 'Dinner out',              category: 'food',          paidBy: 'user-2', source: 'bot',    date: subDays(NOW, 2),  createdAt: subDays(NOW, 2),  settlementPeriodId: 'sp-4', settledAt: s3SettledAt },
   { id: 'e-19', partnershipId: 'p-1', scope: 'shared',   amount: 12.99,  description: 'iCloud storage',          category: 'subscriptions', paidBy: 'user-1', source: 'manual', date: subDays(NOW, 1),  createdAt: subDays(NOW, 1),  settlementPeriodId: 'sp-4', settledAt: null },
   // personal — no period
   { id: 'e-20', partnershipId: 'p-1', scope: 'personal', amount: 89.99,  description: 'New running shoes',       category: 'shopping',      paidBy: 'user-1', source: 'manual', date: subDays(NOW, 10), createdAt: subDays(NOW, 10), settlementPeriodId: null, settledAt: null },
@@ -173,6 +174,22 @@ let settlements: Settlement[] = [
     confirmedAt: s2SettledAt,
     partnerDisplayNameSnapshot: 'Rose',
     expenseIds: ['e-7', 'e-8', 'e-9', 'e-10', 'e-11', 'e-12'],
+  },
+  // sp-4 mid-period settlement — covers e-17 and e-18, e-19 came in after
+  {
+    id: 's-3',
+    periodId: 'sp-4',
+    partnershipId: 'p-1',
+    fromUserId: 'user-2',
+    toUserId: 'user-1',
+    amount: 9.30,
+    status: 'confirmed',
+    initiatedBy: 'user-1',
+    confirmedBy: 'user-2',
+    initiatedAt: subDays(s3SettledAt, 0),
+    confirmedAt: s3SettledAt,
+    partnerDisplayNameSnapshot: 'Rose',
+    expenseIds: ['e-17', 'e-18'],
   },
 ]
 

@@ -6,8 +6,8 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import type { Expense } from '@/lib/db/expense'
-import type { SettlementPeriod } from '@/lib/db/settlement'
-import { calcBalance } from '@/lib/utils/balance-calc'
+import type { Settlement, SettlementPeriod } from '@/lib/db/settlement'
+import { calcNetBalance } from '@/lib/utils/balance-calc'
 import { formatCurrency } from '@/lib/utils/format-currency'
 import { formatPeriodLabel } from '@/lib/utils/period-label'
 
@@ -18,6 +18,7 @@ interface Props {
   expenses: Expense[]
   currentUserId: string
   partnerName: string
+  confirmedSettlements?: Settlement[]
   onConfirm: () => Promise<void>
   isLoading: boolean
 }
@@ -29,12 +30,14 @@ export function SettlePeriodDialog({
   expenses,
   currentUserId,
   partnerName,
+  confirmedSettlements,
   onConfirm,
   isLoading,
 }: Props) {
-  const { userPaid, partnerPaid, totalShared, userShare, balanceAmount, direction } = calcBalance(
+  const { userPaid, partnerPaid, totalShared, userShare, balanceAmount, direction } = calcNetBalance(
     expenses,
     currentUserId,
+    confirmedSettlements ?? [],
   )
 
   const outcomeLabel =

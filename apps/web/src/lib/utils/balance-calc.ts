@@ -83,3 +83,25 @@ export function calcNetBalance(
 
   return { ...gross, balanceAmount, direction }
 }
+
+// Returns the net outcome across a list of settlements from the current user's perspective.
+// Positive = partner paid user (owed), negative = user paid partner (owes).
+export function calcSettlementOutcome(
+  settlements: Settlement[],
+  currentUserId: string,
+): { direction: BalanceResult['direction']; amount: number } {
+  const confirmed = settlements.filter(s => s.status === 'confirmed')
+  if (confirmed.length === 0) return { direction: 'none', amount: 0 }
+
+  let signedNet = 0
+  for (const s of confirmed) {
+    if (s.fromUserId === currentUserId) {
+      signedNet -= s.amount
+    } else {
+      signedNet += s.amount
+    }
+  }
+
+  if (Math.abs(signedNet) < 0.005) return { direction: 'even', amount: 0 }
+  return { direction: signedNet > 0 ? 'owed' : 'owes', amount: Math.abs(signedNet) }
+}
