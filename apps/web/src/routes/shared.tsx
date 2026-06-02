@@ -351,6 +351,7 @@ function SharedLedger() {
           expenses={expenses}
           currentUserId={authUser?.id ?? ''}
           partnerName={partnerUser?.displayName ?? 'Partner'}
+          confirmedSettlements={confirmedSettlements}
           onConfirm={handleInitiateSettle}
           isLoading={initiateSettlement.isPending}
         />
