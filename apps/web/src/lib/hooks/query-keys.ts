@@ -7,6 +7,10 @@ export const queryKeys = {
   partnerships: {
     detail: (partnershipId: string) => ['partnerships', partnershipId] as const,
   },
+  invites: {
+    sent: (userId: string) => ['invites', 'sent', userId] as const,
+    pending: (email: string) => ['invites', 'pending', email] as const,
+  },
   expenses: {
     all: (partnershipId: string) => ['expenses', partnershipId] as const,
     filtered: (partnershipId: string, filters: ExpenseFilters) => ['expenses', partnershipId, filters] as const,

@@ -2,3 +2,4 @@
 export { formatAmountInput } from './format-amount-input'
 export { calcBalance, type BalanceResult } from './balance-calc'
 export { formatPeriodLabel, formatTimeRemaining } from './period-label'
+export { getInitials } from './get-initials'

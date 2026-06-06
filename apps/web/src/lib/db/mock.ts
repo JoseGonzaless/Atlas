@@ -6,7 +6,6 @@ import type {
   PartnershipInviteStatus,
   CreatePartnershipInviteInput,
   CreatePartnershipInput,
-  UpdatePartnershipInput,
 } from './partnership'
 import type {
   Expense,
@@ -56,6 +55,7 @@ let users: User[] = [
     displayName: 'Jose',
     email: 'jose@atlas.app',
     onboardingComplete: true,
+    telegramHandle: '@jose_atlas',
     partnershipId: 'p-1',
     createdAt: subWeeks(NOW, 5),
   },
@@ -73,8 +73,6 @@ let partnerships: Partnership[] = [
   {
     id: 'p-1',
     userIds: ['user-1', 'user-2'],
-    settlementFrequency: 'weekly',
-    settlementDayOfWeek: 1,
     createdAt: subWeeks(NOW, 5),
   },
 ]
@@ -223,14 +221,6 @@ export class MockDatabase implements IDatabase {
     return partnership
   }
 
-  async updatePartnership(id: string, data: UpdatePartnershipInput): Promise<Partnership> {
-    await delay(80)
-    const idx = partnerships.findIndex(p => p.id === id)
-    if (idx === -1) throw new Error(`Not found: ${id}`)
-    partnerships[idx] = { ...partnerships[idx], ...data }
-    return partnerships[idx]
-  }
-
   async dissolvePartnership(id: string): Promise<void> {
     await delay(80)
     const idx = partnerships.findIndex(p => p.id === id)
@@ -245,7 +235,7 @@ export class MockDatabase implements IDatabase {
 
   async getPendingInviteForEmail(email: string): Promise<PartnershipInvite | null> {
     await delay(80)
-    return invites.find(i => i.toEmail === email && i.status === 'pending') ?? null
+    return invites.find(i => i.toEmail.toLowerCase() === email.toLowerCase() && i.status === 'pending') ?? null
   }
 
   async getSentInviteByUser(fromUserId: string): Promise<PartnershipInvite | null> {
@@ -272,6 +262,32 @@ export class MockDatabase implements IDatabase {
     const idx = invites.findIndex(i => i.id === id)
     if (idx === -1) throw new Error(`Not found: ${id}`)
     invites[idx] = { ...invites[idx], status }
+
+    // NOTE(backend): accepting an invite must be a single server-side transaction
+    // that creates the partnership and links BOTH users atomically — with authz so
+    // only the invitee may accept, and a guard against either user already being
+    // linked. The mock reproduces that side effect here so the prototype's accept
+    // flow works end-to-end. When the backend lands, replace this block with the
+    // real `acceptInvite` endpoint and have the client call a dedicated mutation
+    // instead of a generic status update.
+    if (status === 'accepted') {
+      const invite = invites[idx]
+      const inviter = users.find(u => u.id === invite.fromUserId)
+      const accepter = users.find(u => u.email.toLowerCase() === invite.toEmail.toLowerCase())
+      if (inviter && accepter && !inviter.partnershipId && !accepter.partnershipId) {
+        const partnership: Partnership = {
+          id: crypto.randomUUID(),
+          userIds: [inviter.id, accepter.id],
+          createdAt: new Date(),
+        }
+        partnerships.push(partnership)
+        for (const u of [inviter, accepter]) {
+          const uidx = users.findIndex(x => x.id === u.id)
+          users[uidx] = { ...users[uidx], partnershipId: partnership.id }
+        }
+      }
+    }
+
     return invites[idx]
   }
 

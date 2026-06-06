@@ -1,7 +1,6 @@
 import type { User } from './user'
 import type { UpdateUserInput } from './user'
-import type { Partnership, PartnershipInvite, PartnershipInviteStatus, CreatePartnershipInviteInput } from './partnership'
-import type { CreatePartnershipInput, UpdatePartnershipInput } from './partnership'
+import type { Partnership, PartnershipInvite, PartnershipInviteStatus, CreatePartnershipInviteInput, CreatePartnershipInput } from './partnership'
 import type { Expense, ExpenseFilters, CreateExpenseInput, UpdateExpenseInput } from './expense'
 import type {
   SettlementPeriod,
@@ -26,7 +25,6 @@ export interface IDatabase {
 
   getPartnership(id: string): Promise<Partnership>
   createPartnership(data: CreatePartnershipInput): Promise<Partnership>
-  updatePartnership(id: string, data: UpdatePartnershipInput): Promise<Partnership>
   dissolvePartnership(id: string): Promise<void>
 
   // ── Partnership Invites ───────────────────────────────────────────────────

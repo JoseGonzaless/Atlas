@@ -1,11 +1,11 @@
 ﻿import { useQuery } from '@tanstack/react-query'
 import { db } from '@/lib/db'
-import { useAuth } from '@/lib/use-auth'
 import { queryKeys } from './query-keys'
+import { useCurrentUser } from './use-current-user'
 
 export function usePartnership() {
-  const { user } = useAuth()
-  const partnershipId = user?.partnershipId
+  const { data: currentUser } = useCurrentUser()
+  const partnershipId = currentUser?.partnershipId
 
   return useQuery({
     queryKey: queryKeys.partnerships.detail(partnershipId!),
