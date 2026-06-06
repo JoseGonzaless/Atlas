@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import { useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { Link, useNavigate } from '@tanstack/react-router'
 import {
@@ -46,7 +45,6 @@ function getInitialCollapsed(): boolean {
 
 export function Sidebar() {
   const navigate = useNavigate()
-  const queryClient = useQueryClient()
   const [collapsed, setCollapsed] = useState(getInitialCollapsed)
   const [confirmOpen, setConfirmOpen] = useState(false)
   const [isLoggingOut, setIsLoggingOut] = useState(false)
@@ -64,10 +62,9 @@ export function Sidebar() {
   async function handleLogOut() {
     setIsLoggingOut(true)
     try {
+      // signOut() clears the React Query cache so the next account can't see
+      // the previous user's data.
       await signOut()
-      // Drop all cached user/ledger data so the next account to log in on this
-      // device can't briefly see the previous user's data.
-      queryClient.clear()
       void navigate({ to: '/login' })
     } catch {
       // Keep the dialog open and re-enable the buttons so the user isn't trapped.

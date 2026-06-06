@@ -1,9 +1,9 @@
-import type { AuthState } from './types'
 import type { User } from '@/lib/db/user'
 
-const STORAGE_KEY = 'atlas_mock_user'
+export const USER_KEY = 'atlas_mock_user'
+export const AUTH_KEY = 'atlas_mock_authed'
 
-const MOCK_USERS: Record<string, User> = {
+export const MOCK_USERS: Record<string, User> = {
   'user-1': {
     id: 'user-1',
     displayName: 'Jose',
@@ -23,19 +23,9 @@ const MOCK_USERS: Record<string, User> = {
 }
 
 export function getActiveMockUserId(): string {
-  return localStorage.getItem(STORAGE_KEY) ?? 'user-1'
+  return localStorage.getItem(USER_KEY) ?? 'user-1'
 }
 
 export function setActiveMockUserId(id: string): void {
-  localStorage.setItem(STORAGE_KEY, id)
-}
-
-export function useAuth(): AuthState {
-  const user = MOCK_USERS[getActiveMockUserId()] ?? MOCK_USERS['user-1']
-  return {
-    user,
-    loading: false,
-    signIn: async () => {},
-    signOut: async () => {},
-  }
+  localStorage.setItem(USER_KEY, id)
 }

@@ -12,8 +12,11 @@ function RootComponent() {
   const isAuthPage = pathname === '/login' || pathname === '/signup'
 
   useEffect(() => {
-    if (!loading && user === null && !isAuthPage) {
+    if (loading) return
+    if (user === null && !isAuthPage) {
       void navigate({ to: '/login' })
+    } else if (user !== null && isAuthPage) {
+      void navigate({ to: '/' })
     }
   }, [loading, user, isAuthPage, navigate])
 
@@ -25,12 +28,15 @@ function RootComponent() {
     )
   }
 
-  if (!user && !isAuthPage) {
-    return null
+  if (isAuthPage) {
+    // Authed users are redirected to '/' by the effect above — render nothing
+    // until that lands so the login/signup form doesn't flash.
+    return user ? null : <Outlet />
   }
 
-  if (isAuthPage) {
-    return <Outlet />
+  if (!user) {
+    // Unauthed on a protected route — the effect redirects to /login.
+    return null
   }
 
   return (
