@@ -15,7 +15,6 @@ import {
 } from '@/lib/hooks'
 import { toast } from 'sonner'
 import { useAuth } from '@/lib/use-auth'
-import type { Settlement } from '@/lib/db/settlement'
 import { DashboardSummaryBar } from '@/components/dashboard/dashboard-summary-bar'
 import { DashboardPeriodCard } from '@/components/dashboard/dashboard-period-card'
 import { DashboardRecentShared } from '@/components/dashboard/dashboard-recent-shared'
@@ -23,8 +22,9 @@ import { DashboardRecentPersonal } from '@/components/dashboard/dashboard-recent
 import { DashboardSettlementHistory } from '@/components/dashboard/dashboard-settlement-history'
 import { PendingSettlementBanner } from '@/components/expenses/pending-settlement-banner'
 import { Skeleton } from '@/components/ui/skeleton'
-import { calcBalance, calcNetBalance } from '@/lib/utils/balance-calc'
+import { calcNetBalance } from '@/lib/utils/balance-calc'
 import { formatCurrency } from '@/lib/utils/format-currency'
+import { groupSettlementsByPeriod } from '@/lib/utils/group-settlements'
 
 export const Route = createFileRoute('/')({
   component: DashboardPage,
@@ -33,9 +33,20 @@ export const Route = createFileRoute('/')({
 function DashboardPage() {
   const { user: authUser } = useAuth()
 
-  const { data: partnership } = usePartnership()
+  const { data: partnership, isLoading: partnershipLoading } = usePartnership()
 
-  const { data: allExpenses = [], isLoading: expensesLoading } = useExpenses()
+  const ownId = authUser?.id ?? ''
+  // Fetch only what the dashboard renders. Personal expenses are private to their
+  // owner, so scope the personal query to the current user instead of pulling the
+  // whole partnership's expenses (which includes the partner's personal rows) and
+  // filtering in the browser.
+  // NOTE(backend): the API must enforce this — never return another user's
+  // personal expenses regardless of the requested filter.
+  const { data: sharedExpenses = [], isLoading: sharedLoading } = useExpenses({ scope: 'shared' })
+  const { data: personalExpenses = [], isLoading: personalLoading } = useExpenses({
+    scope: 'personal',
+    paidBy: ownId,
+  })
   const { data: activePeriod, isLoading: periodLoading } = useActiveSettlementPeriod()
   const { data: periodExpenses = [], isLoading: periodExpensesLoading } = useSharedPeriodExpenses(activePeriod?.id)
   const { data: pendingSettlement = null } = usePendingSettlement(activePeriod?.id)
@@ -46,10 +57,13 @@ function DashboardPage() {
   const respondToSettlement = useRespondToSettlement()
 
   const partnerUserId = partnership?.userIds.find(id => id !== authUser?.id)
-  const { data: partnerUser } = useUser(partnerUserId)
+  const { data: partnerUser, isLoading: partnerLoading } = useUser(partnerUserId)
 
   const isLoading =
-    expensesLoading ||
+    partnershipLoading ||
+    partnerLoading ||
+    sharedLoading ||
+    personalLoading ||
     periodLoading ||
     periodsLoading ||
     settlementsLoading ||
@@ -64,43 +78,27 @@ function DashboardPage() {
     [allPeriods],
   )
 
-  const settlementsByPeriod = useMemo(() => {
-    const map = new Map<string, Settlement[]>()
-    for (const s of allSettlements) {
-      const list = map.get(s.periodId) ?? []
-      list.push(s)
-      map.set(s.periodId, list)
-    }
-    return map
-  }, [allSettlements])
+  const settlementsByPeriod = useMemo(
+    () => groupSettlementsByPeriod(allSettlements),
+    [allSettlements],
+  )
 
   const recentShared = useMemo(
-    () =>
-      [...allExpenses]
-        .filter(e => e.scope === 'shared')
-        .sort((a, b) => b.date.getTime() - a.date.getTime())
-        .slice(0, 5),
-    [allExpenses],
+    () => [...sharedExpenses].sort((a, b) => b.date.getTime() - a.date.getTime()).slice(0, 5),
+    [sharedExpenses],
   )
 
   const recentPersonal = useMemo(
-    () =>
-      [...allExpenses]
-        .filter(e => e.scope === 'personal' && e.paidBy === authUser?.id)
-        .sort((a, b) => b.date.getTime() - a.date.getTime())
-        .slice(0, 5),
-    [allExpenses, authUser?.id],
+    () => [...personalExpenses].sort((a, b) => b.date.getTime() - a.date.getTime()).slice(0, 5),
+    [personalExpenses],
   )
 
   const thisMonthStats = useMemo(() => {
     const now = new Date()
-    const thisMonthExpenses = allExpenses.filter(e =>
-      isWithinInterval(e.date, { start: startOfMonth(now), end: endOfMonth(now) }),
-    )
-    const sharedThisMonth = thisMonthExpenses.filter(e => e.scope === 'shared')
-    const personalThisMonth = thisMonthExpenses.filter(
-      e => e.scope === 'personal' && e.paidBy === authUser?.id,
-    )
+    const start = startOfMonth(now)
+    const end = endOfMonth(now)
+    const sharedThisMonth = sharedExpenses.filter(e => isWithinInterval(e.date, { start, end }))
+    const personalThisMonth = personalExpenses.filter(e => isWithinInterval(e.date, { start, end }))
     const totalSharedThisMonth = sharedThisMonth.reduce((sum, e) => sum + e.amount, 0)
     const personalTotal = personalThisMonth.reduce((sum, e) => sum + e.amount, 0)
     return {
@@ -108,14 +106,14 @@ function DashboardPage() {
       personalTotal,
       personalCount: personalThisMonth.length,
     }
-  }, [allExpenses, authUser?.id])
+  }, [sharedExpenses, personalExpenses])
 
-  const { balanceAmount, direction } = useMemo(
-    () => calcNetBalance(periodExpenses, authUser?.id ?? '', confirmedSettlements),
-    [periodExpenses, authUser?.id, confirmedSettlements],
+  // calcNetBalance returns the gross fields (totalShared/userPaid/userShare) too,
+  // so one memoized call covers both the summary balance and the period card.
+  const periodNet = useMemo(
+    () => calcNetBalance(periodExpenses, ownId, confirmedSettlements),
+    [periodExpenses, ownId, confirmedSettlements],
   )
-
-  const periodBalance = calcBalance(periodExpenses, authUser?.id ?? '')
 
   async function handleCancelSettle() {
     if (!pendingSettlement || !authUser?.id) return
@@ -189,8 +187,8 @@ function DashboardPage() {
         totalThisMonth={thisMonthStats.totalThisMonth}
         personalTotal={thisMonthStats.personalTotal}
         personalCount={thisMonthStats.personalCount}
-        balanceAmount={balanceAmount}
-        direction={direction}
+        balanceAmount={periodNet.balanceAmount}
+        direction={periodNet.direction}
         partnerName={partnerUser?.displayName ?? 'Partner'}
         activePeriod={activePeriod ?? null}
       />
@@ -199,9 +197,9 @@ function DashboardPage() {
         <div className="flex flex-col gap-3">
           <DashboardPeriodCard
             period={activePeriod}
-            totalShared={periodBalance.totalShared}
-            userPaid={periodBalance.userPaid}
-            userShare={periodBalance.userShare}
+            totalShared={periodNet.totalShared}
+            userPaid={periodNet.userPaid}
+            userShare={periodNet.userShare}
           />
           {pendingSettlement && authUser?.id && (
             <PendingSettlementBanner

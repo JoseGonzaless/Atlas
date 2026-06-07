@@ -7,11 +7,11 @@ import {
   useUser,
 } from '@/lib/hooks'
 import { useAuth } from '@/lib/use-auth'
-import type { Settlement } from '@/lib/db/settlement'
 import { SettlementPeriodCard } from '@/components/settlements/settlement-period-card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { buttonVariants } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
+import { groupSettlementsByPeriod } from '@/lib/utils/group-settlements'
 
 export const Route = createFileRoute('/settlements')({
   component: SettlementsPage,
@@ -30,15 +30,10 @@ function SettlementsPage() {
   const isLoading = periodsLoading || settlementsLoading
 
   // Group settlements by their periodId so cards don't fetch individually
-  const settlementsByPeriod = useMemo(() => {
-    const map = new Map<string, Settlement[]>()
-    for (const s of allSettlements) {
-      const list = map.get(s.periodId) ?? []
-      list.push(s)
-      map.set(s.periodId, list)
-    }
-    return map
-  }, [allSettlements])
+  const settlementsByPeriod = useMemo(
+    () => groupSettlementsByPeriod(allSettlements),
+    [allSettlements],
+  )
 
   const sortedPeriods = useMemo(
     () => [...periods].sort((a, b) => b.startDate.getTime() - a.startDate.getTime()),

@@ -2,10 +2,11 @@ import { Link } from '@tanstack/react-router'
 import { format } from 'date-fns'
 import { CircleCheck, ClockAlert } from 'lucide-react'
 import type { SettlementPeriod, Settlement } from '@/lib/db/settlement'
+import type { BalanceResult } from '@/lib/utils/balance-calc'
 import { cn } from '@/lib/utils'
 import { calcSettlementOutcome } from '@/lib/utils/balance-calc'
-import { formatCurrency } from '@/lib/utils/format-currency'
 import { formatPeriodLabel } from '@/lib/utils/period-label'
+import { SplitAmount } from '@/components/ui/split-amount'
 
 interface Props {
   recentClosedPeriods: SettlementPeriod[]
@@ -13,24 +14,21 @@ interface Props {
   currentUserId: string
 }
 
-function OutcomeAmount({ direction, amount }: { direction: string; amount: number }) {
+function OutcomeAmount({ direction, amount }: { direction: BalanceResult['direction']; amount: number }) {
   if (direction === 'even' || direction === 'none') {
     return <span className="text-sm text-muted-foreground tabular-nums">—</span>
   }
 
-  const formatted = formatCurrency(amount)
-  const dotIndex = formatted.indexOf('.')
   const prefix = direction === 'owed' ? '+' : '-'
   const colorClass = direction === 'owed' ? 'text-positive' : 'text-negative'
 
-  if (dotIndex === -1)
-    return <span className={cn('text-sm font-semibold tabular-nums', colorClass)}>{prefix}{formatted}</span>
-
   return (
-    <span className={cn('text-sm font-semibold tabular-nums', colorClass)}>
-      {prefix}{formatted.slice(0, dotIndex)}
-      <span className="font-normal opacity-70">{formatted.slice(dotIndex)}</span>
-    </span>
+    <SplitAmount
+      amount={amount}
+      prefix={prefix}
+      className={cn('font-semibold', colorClass)}
+      fractionClassName="font-normal opacity-70"
+    />
   )
 }
 
