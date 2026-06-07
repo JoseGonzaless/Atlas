@@ -1,6 +1,6 @@
 ﻿import { useState } from 'react'
 import { CalendarIcon } from 'lucide-react'
-import { format, parseISO } from 'date-fns'
+import { format, parseISO, startOfDay, endOfDay } from 'date-fns'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Button, buttonVariants } from '@/components/ui/button'
@@ -85,6 +85,13 @@ export function ExpenseForm({
     }
     if (!values.date) {
       errs.date = 'Date is required'
+    } else if (periodStart && periodEnd) {
+      // The calendar UI restricts selection, but enforce it here too so a default
+      // or edited date can't land outside the period.
+      const d = parseISO(values.date)
+      if (d < startOfDay(periodStart) || d > endOfDay(periodEnd)) {
+        errs.date = 'Date must be within the current period'
+      }
     }
     setErrors(errs)
     return Object.keys(errs).length === 0
@@ -92,7 +99,11 @@ export function ExpenseForm({
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    if (validate()) onSubmit(values)
+    if (!validate()) return
+    // Round to cents so we never store/sum sub-cent amounts that the UI would
+    // round in display (keeps line items and totals consistent).
+    const amount = (Math.round(Number(values.amount) * 100) / 100).toString()
+    onSubmit({ ...values, amount })
   }
 
   return (
@@ -108,7 +119,7 @@ export function ExpenseForm({
             value={amountDisplay}
             onChange={e => {
               const raw = e.target.value.replace(/,/g, '')
-              if (raw === '' || /^\d*\.?\d*$/.test(raw)) {
+              if (raw === '' || /^\d*\.?\d{0,2}$/.test(raw)) {
                 set('amount', raw)
                 setAmountDisplay(raw)
               }

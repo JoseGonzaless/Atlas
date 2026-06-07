@@ -1,11 +1,14 @@
 ﻿import { useQuery } from '@tanstack/react-query'
 import { db } from '@/lib/db'
-import { useAuth } from '@/lib/use-auth'
 import { queryKeys } from './query-keys'
+import { useCurrentUser } from './use-current-user'
 
 export function useSharedPeriodExpenses(activePeriodId: string | undefined) {
-  const { user } = useAuth()
-  const partnershipId = user?.partnershipId
+  // Use the DB-backed current user (not the static auth context) so an unlink
+  // immediately disables this query instead of leaving it pointed at a dead
+  // partnership.
+  const { data: currentUser } = useCurrentUser()
+  const partnershipId = currentUser?.partnershipId
 
   const filters = activePeriodId
     ? { scope: 'shared' as const, settlementPeriodId: activePeriodId }

@@ -290,9 +290,11 @@ function SharedLedger() {
             />
           )}
 
-          {/* Totals strip — gross amounts + net adjusted for confirmed settlements */}
+          {/* Totals strip — gross amounts + net adjusted for confirmed settlements.
+              Always period-wide (not `filtered`) so the net balance matches the
+              amount "Settle now" actually settles. */}
           <SharedSummaryBar
-            expenses={filtered}
+            expenses={expenses}
             currentUserId={authUser?.id ?? ''}
             partnerName={partnerUser?.displayName ?? 'Partner'}
             confirmedSettlements={confirmedSettlements}

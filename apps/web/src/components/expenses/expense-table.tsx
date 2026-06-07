@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from 'react'
+﻿import { useState, useEffect, useMemo } from 'react'
 import { ChevronUp, ChevronDown, ChevronsUpDown } from 'lucide-react'
 import {
   Table,
@@ -82,8 +82,11 @@ export function ExpenseTable({ expenses, userMap, currentUserId, onEdit, onDelet
     }
   }
 
-  const rows = sorted(expenses, sortField, sortDir, userMap)
-  const totalPages = Math.ceil(rows.length / PAGE_SIZE)
+  const rows = useMemo(
+    () => sorted(expenses, sortField, sortDir, userMap),
+    [expenses, sortField, sortDir, userMap],
+  )
+  const totalPages = Math.max(1, Math.ceil(rows.length / PAGE_SIZE))
   const currentPage = Math.min(page, totalPages)
   const pageRows = rows.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE)
 

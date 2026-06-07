@@ -27,8 +27,12 @@ export function useExpenseFilters(
       }
       if (filters.dateFrom && e.date < startOfDay(parseISO(filters.dateFrom))) return false
       if (filters.dateTo && e.date > endOfDay(parseISO(filters.dateTo))) return false
-      if (filters.amountMin && e.amount < parseFloat(filters.amountMin)) return false
-      if (filters.amountMax && e.amount > parseFloat(filters.amountMax)) return false
+      // Ignore unparseable amount bounds (e.g. a lone ".") instead of comparing
+      // against NaN, which would silently hide every row.
+      const min = parseFloat(filters.amountMin)
+      if (!isNaN(min) && e.amount < min) return false
+      const max = parseFloat(filters.amountMax)
+      if (!isNaN(max) && e.amount > max) return false
       return true
     })
   }, [expenses, filters, pendingDeleteIds])

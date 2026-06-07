@@ -23,6 +23,16 @@ export function useDeleteWithUndo(expenses: Expense[]) {
     })
   }, [expenses])
 
+  // Clear any still-pending delete timers on unmount so they don't fire after
+  // the component is gone.
+  useEffect(() => {
+    const timers = deleteTimers.current
+    return () => {
+      timers.forEach(clearTimeout)
+      timers.clear()
+    }
+  }, [])
+
   function handleDelete(id: string) {
     const expense = expenses.find(e => e.id === id)
     if (!expense) return
@@ -30,8 +40,21 @@ export function useDeleteWithUndo(expenses: Expense[]) {
     setPendingDeleteIds(prev => new Set(prev).add(id))
 
     const timerId = setTimeout(async () => {
-      await deleteExpense.mutateAsync(id)
       deleteTimers.current.delete(id)
+      try {
+        await deleteExpense.mutateAsync(id)
+      } catch {
+        // Delete failed — un-hide the row and tell the user, otherwise the
+        // expense stays in the list but invisible (its id never leaves
+        // pendingDeleteIds because the cleanup effect only drops ids that have
+        // actually left the expenses list).
+        setPendingDeleteIds(prev => {
+          const s = new Set(prev)
+          s.delete(id)
+          return s
+        })
+        toast.error(`Couldn't delete "${expense.description}". Try again.`)
+      }
     }, 5000)
 
     deleteTimers.current.set(id, timerId)

@@ -1,7 +1,7 @@
 import { TrendingUp, TrendingDown, Minus } from 'lucide-react'
 import type { Expense } from '@/lib/db/expense'
 import type { Settlement } from '@/lib/db/settlement'
-import { calcBalance, calcNetBalance } from '@/lib/utils/balance-calc'
+import { calcNetBalance } from '@/lib/utils/balance-calc'
 import { formatCurrency } from '@/lib/utils/format-currency'
 
 interface Props {
@@ -12,8 +12,13 @@ interface Props {
 }
 
 export function SharedSummaryBar({ expenses, currentUserId, partnerName, confirmedSettlements = [] }: Props) {
-  const { userPaid, partnerPaid, totalShared } = calcBalance(expenses, currentUserId)
-  const { balanceAmount, direction } = calcNetBalance(expenses, currentUserId, confirmedSettlements)
+  // calcNetBalance returns the gross fields (userPaid/partnerPaid/totalShared)
+  // alongside the settlement-adjusted net, so one call covers the whole strip.
+  const { userPaid, partnerPaid, totalShared, balanceAmount, direction } = calcNetBalance(
+    expenses,
+    currentUserId,
+    confirmedSettlements,
+  )
 
   return (
     <div className="grid grid-cols-3 gap-4">
