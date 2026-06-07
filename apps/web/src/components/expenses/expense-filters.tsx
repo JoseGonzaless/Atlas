@@ -23,20 +23,19 @@ interface Props {
   filters: FilterState
   users: { id: string; displayName: string }[]
   onChange: (filters: FilterState) => void
+  /** True when filters differ from the consumer's defaults (from useExpenseFilters). */
+  hasActiveFilters: boolean
+  /** Resets to the consumer's configured defaults (from useExpenseFilters). */
+  onReset: () => void
   children?: ReactNode
   periodStart?: Date
   periodEnd?: Date
   hidePaidBy?: boolean
 }
 
-export function ExpenseFilters({ filters, users, onChange, children, periodStart, periodEnd, hidePaidBy }: Props) {
-  const hasActive = filters.search || filters.category || filters.paidBy || filters.dateFrom || filters.dateTo || filters.amountMin || filters.amountMax
+export function ExpenseFilters({ filters, users, onChange, hasActiveFilters, onReset, children, periodStart, periodEnd, hidePaidBy }: Props) {
   const [dateFromOpen, setDateFromOpen] = useState(false)
   const [dateToOpen, setDateToOpen] = useState(false)
-
-  function reset() {
-    onChange({ search: '', category: '', paidBy: '', dateFrom: '', dateTo: '', amountMin: '', amountMax: '' })
-  }
 
   return (
     <div className="flex flex-wrap items-center gap-2">
@@ -150,7 +149,7 @@ export function ExpenseFilters({ filters, users, onChange, children, periodStart
           value={filters.amountMin}
           onChange={e => {
             const raw = e.target.value
-            if (raw === '' || /^\d*\.?\d*$/.test(raw))
+            if (raw === '' || /^\d*\.?\d{0,2}$/.test(raw))
               onChange({ ...filters, amountMin: raw })
           }}
           className="w-24"
@@ -163,18 +162,18 @@ export function ExpenseFilters({ filters, users, onChange, children, periodStart
           value={filters.amountMax}
           onChange={e => {
             const raw = e.target.value
-            if (raw === '' || /^\d*\.?\d*$/.test(raw))
+            if (raw === '' || /^\d*\.?\d{0,2}$/.test(raw))
               onChange({ ...filters, amountMax: raw })
           }}
           className="w-24"
         />
       </div>
 
-      {hasActive && (
+      {hasActiveFilters && (
         <Button
           variant="ghost"
           size="sm"
-          onClick={reset}
+          onClick={onReset}
           className="gap-1.5 text-muted-foreground"
         >
           <X className="h-3.5 w-3.5" />

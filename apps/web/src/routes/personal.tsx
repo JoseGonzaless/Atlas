@@ -10,7 +10,6 @@ import {
   useExpenseFilters,
 } from '@/lib/hooks'
 import { toast } from 'sonner'
-import { useAuth } from '@/lib/use-auth'
 import type { Expense } from '@/lib/db/expense'
 import { PersonalSummaryBar } from '@/components/expenses/personal-summary-bar'
 import { ExpenseFilters } from '@/components/expenses/expense-filters'
@@ -31,11 +30,10 @@ export const Route = createFileRoute('/personal')({
 })
 
 function PersonalLedger() {
-  const { user: authUser } = useAuth()
   const { data: currentUser } = useCurrentUser()
 
   const { data: expenses = [], isLoading: expensesLoading } = useExpenses(
-    authUser?.id ? { scope: 'personal' as const, paidBy: authUser.id } : undefined,
+    currentUser?.id ? { scope: 'personal' as const, paidBy: currentUser.id } : undefined,
   )
 
   const createExpense = useCreateExpense()
@@ -62,16 +60,16 @@ function PersonalLedger() {
   )
 
   async function handleAdd(values: ExpenseFormValues) {
-    if (!authUser?.id || !authUser.partnershipId) return
+    if (!currentUser?.id || !currentUser.partnershipId) return
     const date = parseISO(values.date)
     try {
       await createExpense.mutateAsync({
-        partnershipId: authUser.partnershipId,
+        partnershipId: currentUser.partnershipId,
         scope: 'personal',
         amount: Number(values.amount),
         description: values.description.trim(),
         category: values.category,
-        paidBy: authUser.id,
+        paidBy: currentUser.id,
         source: 'manual',
         date,
         settlementPeriodId: null,
@@ -142,6 +140,8 @@ function PersonalLedger() {
           filters={filters}
           users={currentUserEntry}
           onChange={setFilters}
+          hasActiveFilters={hasActiveFilters}
+          onReset={resetFilters}
           hidePaidBy
         >
           <AddExpenseDialog
@@ -176,7 +176,7 @@ function PersonalLedger() {
           <ExpenseTable
             expenses={filtered}
             userMap={userMap}
-            currentUserId={authUser?.id ?? ''}
+            currentUserId={currentUser?.id ?? ''}
             onEdit={setEditingExpense}
             onDelete={handleDelete}
             hiddenColumns={['paidBy', 'status']}

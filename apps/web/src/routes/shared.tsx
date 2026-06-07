@@ -302,7 +302,7 @@ function SharedLedger() {
 
           {/* Filters + expense table */}
           <div className="flex flex-col gap-3">
-            <ExpenseFilters filters={filters} users={users} onChange={setFilters} periodStart={activePeriod.startDate} periodEnd={activePeriod.endDate}>
+            <ExpenseFilters filters={filters} users={users} onChange={setFilters} hasActiveFilters={hasActiveFilters} onReset={resetFilters} periodStart={activePeriod.startDate} periodEnd={activePeriod.endDate}>
               <AddExpenseDialog
                 open={addOpen}
                 onOpenChange={setAddOpen}
