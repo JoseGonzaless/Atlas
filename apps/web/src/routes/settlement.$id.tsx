@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
-import { useMemo, useState } from 'react'
+import { useMemo, useState, type ReactNode } from 'react'
 import { format } from 'date-fns'
 import { ArrowLeft } from 'lucide-react'
 import {
@@ -51,6 +51,10 @@ function SettlementPeriodPage() {
 
   const isLoading = periodsLoading || settlementsLoading || expensesLoading
 
+  // The period is resolved from the partnership-scoped `allPeriods`, so an `id`
+  // from another partnership simply isn't found (renders "not found" below).
+  // NOTE(backend): don't rely on this client-side scoping — the API must verify
+  // that `$id` belongs to the caller's partnership before returning period data.
   const period = useMemo(() => allPeriods.find(p => p.id === id), [allPeriods, id])
 
   const periodSettlements = useMemo(
@@ -66,7 +70,13 @@ function SettlementPeriodPage() {
     [periodSettlements],
   )
 
-  // Union of expenseIds across all confirmed settlements — the frozen snapshot
+  // Union of expenseIds across all confirmed settlements.
+  // NOTE(backend): this is NOT a truly frozen snapshot — the settlement stores
+  // only expense *ids*, so we re-resolve them against the live expenses below.
+  // If an expense is edited or deleted after settling, "Total shared"/"Each
+  // share" change retroactively and can disagree with the frozen settlement
+  // amount. A faithful audit trail needs the settlement to persist per-expense
+  // amount snapshots; resolve against those once the backend stores them.
   const snapshotIds = useMemo(
     () => new Set(confirmed.flatMap(s => s.expenseIds)),
     [confirmed],
@@ -108,7 +118,8 @@ function SettlementPeriodPage() {
         partnershipId: partnership.id,
         fromUserId,
         toUserId,
-        amount: balanceAmount,
+        // Round to cents — a 50/50 split of an odd-cent total yields a half-cent.
+        amount: Math.round(balanceAmount * 100) / 100,
         initiatedBy: authUser.id,
         partnerDisplayNameSnapshot: partnerName,
       })
@@ -198,12 +209,19 @@ function SettlementPeriodPage() {
       ? `Last settled on ${format(lastConfirmed.confirmedAt, 'MMM d, yyyy')}`
       : null
 
+  // Shared title row (title + status badge + optional action) so the outstanding
+  // and settled branches don't duplicate the markup.
+  const titleRow = (action?: ReactNode) => (
+    <div className="flex items-center gap-3">
+      <h1 className="font-display text-3xl">{formatPeriodLabel(period)}</h1>
+      <SettlementStatusBadge type="period" status={period.status} />
+      {action}
+    </div>
+  )
+
   const pageTitle = (
     <div className="flex flex-col gap-1">
-      <div className="flex items-center gap-3">
-        <h1 className="font-display text-3xl">{formatPeriodLabel(period)}</h1>
-        <SettlementStatusBadge type="period" status={period.status} />
-      </div>
+      {titleRow()}
       {auditLine && <p className="text-sm text-muted-foreground">{auditLine}</p>}
     </div>
   )
@@ -215,10 +233,8 @@ function SettlementPeriodPage() {
         {backLink}
         {/* Header — title, badge, and settle button all on one line */}
         <div className="flex flex-col gap-1">
-          <div className="flex items-center gap-3">
-            <h1 className="font-display text-3xl">{formatPeriodLabel(period)}</h1>
-            <SettlementStatusBadge type="period" status={period.status} />
-            {!pendingSettlement && allPeriodExpenses.length > 0 && (
+          {titleRow(
+            !pendingSettlement && allPeriodExpenses.length > 0 ? (
               <Button
                 size="sm"
                 className="ml-auto bg-shared text-shared-foreground hover:bg-shared/90"
@@ -226,8 +242,8 @@ function SettlementPeriodPage() {
               >
                 Settle now
               </Button>
-            )}
-          </div>
+            ) : undefined,
+          )}
           <p className="text-sm text-muted-foreground">
             This period ended without a settlement — review the expenses below and settle when ready.
           </p>

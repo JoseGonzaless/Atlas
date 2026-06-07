@@ -12,16 +12,22 @@ interface Props {
 }
 
 export function SettlementSummaryBar({ confirmed, expenses, currentUserId, partnerName, variant = 'settled' }: Props) {
-  const { totalShared, userShare } = calcBalance(expenses, currentUserId)
-
+  let totalShared: number
+  let userShare: number
   let outcomeDirection: ReturnType<typeof calcSettlementOutcome>['direction']
   let outcomeAmount: number
 
   if (variant === 'outstanding') {
+    // calcNetBalance returns the gross fields too, so one call covers the strip.
     const net = calcNetBalance(expenses, currentUserId, confirmed)
+    totalShared = net.totalShared
+    userShare = net.userShare
     outcomeDirection = net.direction
     outcomeAmount = net.balanceAmount
   } else {
+    const gross = calcBalance(expenses, currentUserId)
+    totalShared = gross.totalShared
+    userShare = gross.userShare
     const outcome = calcSettlementOutcome(confirmed, currentUserId)
     outcomeDirection = outcome.direction
     outcomeAmount = outcome.amount

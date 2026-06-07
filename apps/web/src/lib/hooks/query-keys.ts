@@ -1,4 +1,5 @@
 import type { ExpenseFilters } from '@/lib/db/expense'
+import type { SettlementPeriodFilters } from '@/lib/db/settlement'
 
 export const queryKeys = {
   users: {
@@ -17,6 +18,8 @@ export const queryKeys = {
   },
   settlementPeriods: {
     all: (partnershipId: string) => ['settlementPeriods', partnershipId] as const,
+    filtered: (partnershipId: string, filters: SettlementPeriodFilters) =>
+      ['settlementPeriods', partnershipId, filters] as const,
     active: (partnershipId: string) => ['settlementPeriods', partnershipId, 'active'] as const,
     detail: (periodId: string) => ['settlementPeriods', 'detail', periodId] as const,
   },

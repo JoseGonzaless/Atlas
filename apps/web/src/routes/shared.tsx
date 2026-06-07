@@ -135,7 +135,8 @@ function SharedLedger() {
         partnershipId: partnership.id,
         fromUserId,
         toUserId,
-        amount: balanceAmount,
+        // Round to cents — a 50/50 split of an odd-cent total yields a half-cent.
+        amount: Math.round(balanceAmount * 100) / 100,
         initiatedBy: authUser.id,
         partnerDisplayNameSnapshot: partnerUser?.displayName ?? 'Partner',
       })

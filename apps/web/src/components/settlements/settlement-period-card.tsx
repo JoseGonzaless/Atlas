@@ -16,16 +16,14 @@ interface Props {
 export function SettlementPeriodCard({ period, settlements, currentUserId, partnerName }: Props) {
   const { direction, amount } = calcSettlementOutcome(settlements, currentUserId)
 
-  const outcomeText =
-    period.status === 'open'
-      ? 'Active period'
-      : direction === 'none' && period.status === 'outstanding'
-        ? 'Unsettled'
-        : direction === 'none' || direction === 'even'
-          ? 'All even'
-          : direction === 'owed'
-            ? `${partnerName} owed you ${formatCurrency(amount)}`
-            : `You owed ${partnerName} ${formatCurrency(amount)}`
+  function getOutcomeText(): string {
+    if (period.status === 'open') return 'Active period'
+    if (direction === 'none') return period.status === 'outstanding' ? 'Unsettled' : 'All even'
+    if (direction === 'even') return 'All even'
+    if (direction === 'owed') return `${partnerName} owed you ${formatCurrency(amount)}`
+    return `You owed ${partnerName} ${formatCurrency(amount)}`
+  }
+  const outcomeText = getOutcomeText()
 
   const outcomeColor =
     direction === 'owed'
